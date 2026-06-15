@@ -1,0 +1,19 @@
+# Normalize line endings to LF on check-in for text files
+* text=auto
+
+# Source code
+*.java text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.properties text eol=lf
+*.md text eol=lf
+
+# Scripts
+*.sh text eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Maven wrapper
+mvnw text eol=lf
+mvnw.cmd text eol=crlf

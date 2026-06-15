@@ -1,0 +1,49 @@
+# A-08 RSQL regression corpus.
+# Placeholders are decoded by RsqlRegressionCorpusTest.
+<EMPTY>
+<SPACE>
+<TAB>
+sku==
+sku==A
+sku=='A'
+sku=="A"
+sku='unterminated
+sku="unterminated
+(sku==A
+sku==A)
+((sku==A))
+(((sku==A)))
+sku=in=()
+sku=in=(A,)
+sku=in=(,A)
+sku=in=('a,b',"c;d")
+sku=in=(A,B,C)
+sku=out=(A,B)
+sku=custom=A
+sku=like='*A*'
+SKU==A
+passwordHash==A
+price==10.50
+supplier.name==A
+amount==10.50
+amount==not-a-number
+amount=in=(10.50,not-a-number)
+amount>10
+amount>=10
+amount<10
+amount<=10
+stock==42
+stock==42.5
+status==PUBLISHED
+status==DELETED
+releaseDate==2026-06-12
+releaseDate==not-a-date
+reviewRating==5
+reviewRating=in=(1,2,3)
+sku==<SNOWMAN>
+sku==<BACKSLASH>
+sku=="escaped \" quote"
+sku=='escaped \' quote'
+sku==A;name==B
+sku==A,name==B
+sku==A;(name==B,amount==10)
