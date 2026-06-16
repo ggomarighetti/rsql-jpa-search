@@ -167,12 +167,13 @@ class SearchRsqlAutoConfigurationTest {
                     .paging()
                     .build();
 
+            PageRequest pageRequest = PageRequest.of(0, 10);
             SearchDefinitionValidationException exception = assertThrows(
                     SearchDefinitionValidationException.class,
                     () -> compiler.compile(
                             "code==CAT123",
                             null,
-                            PageRequest.of(0, 10),
+                            pageRequest,
                             definition));
 
             assertEquals(SearchDefinitionValidationException.RSQL_CONFIGURATION_INVALID, exception.code());
