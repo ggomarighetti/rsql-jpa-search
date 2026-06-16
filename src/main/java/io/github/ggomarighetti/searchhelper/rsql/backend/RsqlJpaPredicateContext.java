@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Objects;
 
 /** JPA state and converted arguments supplied to a custom operator predicate. */
-public record RsqlJpaPredicateContext<P, A, B>(
+public record RsqlJpaPredicateContext<P, A, B, R, J>(
         CriteriaBuilder criteriaBuilder,
         Path<P> path,
         Attribute<A, B> attribute,
         List<Object> arguments,
-        From<?, ?> root,
+        From<R, J> root,
         RsqlOperator operator) {
     /** Creates a custom-predicate context. */
     public RsqlJpaPredicateContext {
