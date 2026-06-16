@@ -195,11 +195,10 @@ class SearchProtectionTest {
                 .paging()
                 .build();
 
+        PageRequest pageRequest = PageRequest.of(0, 25, Sort.by("supplierName"));
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25, Sort.by("supplierName")),
-                        definition));
+                () -> guard.pageable(pageRequest, definition));
 
         assertRule(exception, "sorting.allow-relation-sorting", 1, 0);
     }
