@@ -487,10 +487,11 @@ class RsqlSearchGuardTest {
                 () -> guard.specification(
                         "taxId=in=(20123456789,20987654321);taxId=in=(30123456789,30987654321)",
                         totalDefinition));
+        SearchDefinition<TestTypes.Product> lengthDefinition = filters(limits -> limits
+                .filter(filter -> filter.maxArgumentLength(5)));
         SearchProtectionException length = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.specification("email==person@example.com", filters(limits -> limits
-                        .filter(filter -> filter.maxArgumentLength(5)))));
+                () -> guard.specification("email==person@example.com", lengthDefinition));
 
         assertProtectionRule(perComparison, "filter.max-arguments-per-comparison");
         assertProtectionRule(total, "filter.max-arguments-total");
