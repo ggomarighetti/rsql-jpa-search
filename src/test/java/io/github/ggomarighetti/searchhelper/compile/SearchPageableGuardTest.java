@@ -262,9 +262,10 @@ class SearchPageableGuardTest {
         assertTrue(boundedUnpaged.isPaged());
         assertEquals(40, boundedUnpaged.getPageSize());
 
+        PageRequest oversizedPage = PageRequest.of(0, 6);
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> limitedGuard.pageable(PageRequest.of(0, 6), definition));
+                () -> limitedGuard.pageable(oversizedPage, definition));
         assertValidationCode(exception, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
     }
 
