@@ -330,9 +330,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsOperatorNotAllowedForField() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("taxId!=20123456789", filters()));
+                () -> guard.specification("taxId!=20123456789", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         RsqlValidationError error = exception.errors().get(0);
