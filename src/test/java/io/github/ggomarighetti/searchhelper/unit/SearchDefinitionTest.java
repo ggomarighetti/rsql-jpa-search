@@ -71,12 +71,11 @@ class SearchDefinitionTest {
 
     @Test
     void rejectsSubtypeOutsideEntityHierarchy() {
-        var builder = SearchDefinition.builder().entity(TestTypes.Product.class)
-                .fields(fields -> fields.add("expiresAt", java.time.Instant.class)
-                        .subtype(String.class)
-                        .filterable(filter -> filter.allow(EQUAL)));
+        var builder = SearchDefinition.builder().entity(TestTypes.Product.class);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> addInvalidSubtypeField(builder));
 
         assertTrue(exception.getMessage().contains("must extend entity"));
     }
@@ -574,5 +573,11 @@ class SearchDefinitionTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         assertTrue(exception.getMessage().contains("ignoreCase sorting requires a CharSequence path"));
+    }
+
+    private static void addInvalidSubtypeField(SearchDefinition.Builder<TestTypes.Product> builder) {
+        builder.fields(fields -> fields.add("expiresAt", java.time.Instant.class)
+                .subtype(String.class)
+                .filterable(filter -> filter.allow(EQUAL)));
     }
 }
