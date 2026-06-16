@@ -146,9 +146,11 @@ class SearchPageableGuardTest {
 
     @Test
     void rejectsUnknownSortSelector() {
+        PageRequest pageRequest = PageRequest.of(0, 25, Sort.by("passwordHash"));
+        SearchDefinition<TestTypes.Product> definition = definition();
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 25, Sort.by("passwordHash")), definition()));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.SORT_RULES_FORBIDDEN);
     }
