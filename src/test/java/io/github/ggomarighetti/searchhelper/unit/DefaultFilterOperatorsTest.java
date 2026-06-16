@@ -152,12 +152,13 @@ class DefaultFilterOperatorsTest {
 
     @Test
     void reportsUnsupportedDefaultProfilesAsDefinitionErrors() {
+        var builder = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("owner", TestTypes.Owner.class).filterable());
+
         SearchDefinitionValidationException exception = assertThrows(
                 SearchDefinitionValidationException.class,
-                () -> SearchDefinition.builder()
-                        .entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("owner", TestTypes.Owner.class).filterable())
-                        .build());
+                builder::build);
 
         assertEquals(
                 SearchDefinitionValidationException.DEFAULT_OPERATORS_UNSUPPORTED_TYPE,
