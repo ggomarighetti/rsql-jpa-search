@@ -481,7 +481,7 @@ public final class SearchPolicy {
             requireNonNegative(maxHeterogeneousOrBranches, "filter.maxHeterogeneousOrBranches");
             requireNonNegative(maxJoinedPaths, "filter.maxJoinedPaths");
             requireNonNegative(maxToManyPaths, "filter.maxToManyPaths");
-            like = Objects.requireNonNull(like, "filter.like must not be null");
+            Objects.requireNonNull(like, "filter.like must not be null");
         }
 
         /**
