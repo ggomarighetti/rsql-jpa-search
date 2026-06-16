@@ -28,7 +28,7 @@ public record RsqlCompilationRequest<T>(
     public RsqlCompilationRequest {
         Assert.hasText(rsql, "rsql must not be blank");
         Objects.requireNonNull(ast, "ast must not be null");
-        definition = Objects.requireNonNull(definition, "definition must not be null");
+        Objects.requireNonNull(definition, "definition must not be null");
         conversionService = Objects.requireNonNull(conversionService, "conversionService must not be null");
         operators = Objects.requireNonNull(operators, "operators must not be null");
     }
