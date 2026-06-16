@@ -437,9 +437,10 @@ class RsqlSearchGuardTest {
     void rejectsRsqlAstNodeComparisonDepthAndLogicalChildLimits() {
         String filter = "taxId==20123456789;email==person@example.com";
 
+        SearchDefinition<TestTypes.Product> nodesDefinition = filters(limits -> limits.rsql(rsql -> rsql.maxNodes(1)));
         RsqlFilterValidationException nodes = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification(filter, filters(limits -> limits.rsql(rsql -> rsql.maxNodes(1)))));
+                () -> guard.specification(filter, nodesDefinition));
         SearchProtectionException comparisons = assertThrows(
                 SearchProtectionException.class,
                 () -> guard.specification(filter, filters(limits -> limits.filter(value -> value.maxComparisons(1)))));
