@@ -204,12 +204,13 @@ class SearchRsqlAutoConfigurationTest {
             assertEquals(new CatalogCode("CAT123"),
                     engine.conversionService().convert("CAT123", CatalogCode.class));
 
+            PageRequest pageRequest = PageRequest.of(0, 10);
             RsqlFilterValidationException exception = assertThrows(
                     RsqlFilterValidationException.class,
                     () -> compiler.compile(
                             "code==BAD",
                             null,
-                            PageRequest.of(0, 10),
+                            pageRequest,
                             definition));
 
             assertEquals(RsqlFilterValidationException.RULES_FORBIDDEN, exception.code());
