@@ -236,10 +236,11 @@ class SearchCompilerTest {
                     throw new IllegalStateException("invalid definition");
                 }));
         SearchDefinition<TestTypes.Product> definition = emptyDefinition();
+        PageRequest pageRequest = PageRequest.of(0, 10);
 
         assertThrows(
                 IllegalStateException.class,
-                () -> customCompiler.compile(null, null, PageRequest.of(0, 10), definition));
+                () -> customCompiler.compile(null, null, pageRequest, definition));
         assertThrows(
                 IllegalStateException.class,
                 () -> customCompiler.compile(null, null, PageRequest.of(0, 10), definition));
