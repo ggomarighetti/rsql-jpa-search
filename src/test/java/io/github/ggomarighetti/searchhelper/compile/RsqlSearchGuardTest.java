@@ -1,18 +1,29 @@
 package io.github.ggomarighetti.searchhelper.compile;
 
+import cz.jirutka.rsql.parser.ast.ComparisonNode;
+import cz.jirutka.rsql.parser.ast.ComparisonOperator;
+import cz.jirutka.rsql.parser.ast.Node;
+import cz.jirutka.rsql.parser.ast.OrNode;
+import cz.jirutka.rsql.parser.ast.RSQLVisitor;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.RsqlFilterValidationException;
 import io.github.ggomarighetti.searchhelper.exception.RsqlValidationError;
 import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.filter.FilterOperator;
+import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.rsql.backend.RsqlBackendAdapter;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperator;
+import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorArity;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorDescriptor;
+import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorRegistry;
 import io.github.ggomarighetti.searchhelper.rsql.RsqlCompilationRequest;
+import io.github.ggomarighetti.searchhelper.rsql.RsqlAst;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import io.github.ggomarighetti.searchhelper.rsql.SearchRsqlEngine;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,6 +44,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RsqlSearchGuardTest {
     private final RsqlSearchGuard guard = new RsqlSearchGuard();
+
+    @Test
+    void exposesConfiguredEngineAndPolicy() {
+        RsqlSearchGuard conversionGuard =
+                new RsqlSearchGuard(ApplicationConversionService.getSharedInstance());
+        SearchRsqlEngine engine = SearchRsqlEngine.defaults();
+        SearchPolicy policy = SearchPolicy.builder()
+                .filter(filter -> filter.maxComparisons(3))
+                .build();
+        RsqlSearchGuard configuredGuard = new RsqlSearchGuard(engine, policy);
+
+        assertNotNull(conversionGuard.engine());
+        assertEquals(SearchPolicy.defaults(), conversionGuard.policy());
+        assertEquals(engine, configuredGuard.engine());
+        assertEquals(policy, configuredGuard.policy());
+    }
 
     @Test
     void returnsSpecificationForAllowedFieldOperatorAndArgument() {
@@ -68,6 +95,56 @@ class RsqlSearchGuardTest {
     }
 
     @Test
+    void wrapsImmediateBackendCompilationFailures() {
+        RsqlBackendAdapter throwingBackend = new RsqlBackendAdapter() {
+            @Override
+            public <T> Specification<T> compile(RsqlCompilationRequest<T> request) {
+                throw new IllegalStateException("boom");
+            }
+        };
+        RsqlSearchGuard throwingGuard = new RsqlSearchGuard(
+                SearchRsqlEngine.builder()
+                        .conversionService(ApplicationConversionService.getSharedInstance())
+                        .backend(throwingBackend)
+                        .build(),
+                SearchPolicy.defaults());
+        SearchDefinition<TestTypes.Product> definition = filters();
+
+        RsqlFilterValidationException exception = assertThrows(
+                RsqlFilterValidationException.class,
+                () -> throwingGuard.specification("taxId==20123456789", definition));
+
+        assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
+    }
+
+    @Test
+    void preservesDeferredRsqlFilterValidationExceptions() {
+        RsqlFilterValidationException expected = new RsqlFilterValidationException(
+                RsqlFilterValidationException.RULES_FORBIDDEN,
+                "already guarded");
+        RsqlBackendAdapter throwingBackend = new RsqlBackendAdapter() {
+            @Override
+            public <T> Specification<T> compile(RsqlCompilationRequest<T> request) {
+                return (root, query, criteriaBuilder) -> {
+                    throw expected;
+                };
+            }
+        };
+        RsqlSearchGuard throwingGuard = new RsqlSearchGuard(
+                SearchRsqlEngine.builder()
+                        .conversionService(ApplicationConversionService.getSharedInstance())
+                        .backend(throwingBackend)
+                        .build(),
+                SearchPolicy.defaults());
+
+        Specification<TestTypes.Product> specification = throwingGuard.specification("taxId==20123456789", filters());
+
+        assertEquals(expected, assertThrows(
+                RsqlFilterValidationException.class,
+                () -> specification.toPredicate(null, null, null)));
+    }
+
+    @Test
     void enablesDistinctOnlyWhenTheUsedFilterTraversesACollectionValuedPath() {
         AtomicReference<Boolean> distinct = new AtomicReference<>();
         RsqlBackendAdapter distinctCapturingBackend = new RsqlBackendAdapter() {
@@ -99,6 +176,9 @@ class RsqlSearchGuardTest {
         assertFalse(distinct.get());
 
         distinctCapturingGuard.specification("reviewRating==5", definition);
+        assertTrue(distinct.get());
+
+        distinctCapturingGuard.specification("amount==10.50;reviewRating==5", definition);
         assertTrue(distinct.get());
     }
 
@@ -344,6 +424,69 @@ class RsqlSearchGuardTest {
     }
 
     @Test
+    void rejectsDeclaredSelectorWhenFilteringIsDisabled() {
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class))
+                .build();
+
+        RsqlFilterValidationException exception = assertThrows(
+                RsqlFilterValidationException.class,
+                () -> guard.specification("email==person@example.com", definition));
+
+        assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
+        RsqlValidationError error = exception.errors().get(0);
+        assertEquals(RsqlValidationError.FILTERING_DISABLED, error.code());
+        assertEquals("$.selector", error.astPath());
+        assertEquals("email", error.selector());
+        assertEquals("EQUAL", error.operator());
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    void rejectsOperatorWithInvalidArity() throws ReflectiveOperationException {
+        RsqlOperator pair = RsqlOperator.of("PAIR");
+        RsqlOperatorDescriptor descriptor = RsqlOperatorDescriptor.builder(pair)
+                .symbol("=pair=")
+                .arity(RsqlOperatorArity.exact(2))
+                .argumentType(String.class)
+                .jpaPredicate(context -> context.criteriaBuilder().conjunction())
+                .build();
+        SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("email", String.class)
+                        .filterable(filter -> filter.allow(pair, String.class, operator -> {})))
+                .build();
+        RsqlRulesValidator validator = validator(definition, new RsqlOperatorRegistry(List.of(descriptor)));
+
+        List<RsqlValidationError> errors = validator.validate(ast(new ComparisonNode(
+                new ComparisonOperator("=pair=", true),
+                "email",
+                List.of("person@example.com"))));
+
+        RsqlValidationError error = errors.get(0);
+        assertEquals(RsqlValidationError.OPERATOR_INVALID_ARITY, error.code());
+        assertEquals("$.arguments", error.astPath());
+        assertEquals("email", error.selector());
+        assertEquals("PAIR", error.operator());
+    }
+
+    @Test
+    void reportsUnsupportedAstNodeAndUnregisteredOperator() throws ReflectiveOperationException {
+        RsqlRulesValidator validator = validator(filters(), SearchRsqlEngine.defaults().operators());
+
+        List<RsqlValidationError> unsupported = validator.validate(ast(new UnsupportedNode()));
+        List<RsqlValidationError> unregistered = validator.validate(ast(new ComparisonNode(
+                new ComparisonOperator("=ghost="),
+                "taxId",
+                List.of("20123456789"))));
+
+        assertEquals(RsqlValidationError.FIELD_NOT_ALLOWED, unsupported.get(0).code());
+        assertEquals("$", unsupported.get(0).astPath());
+        assertEquals(RsqlValidationError.OPERATOR_NOT_ALLOWED, unregistered.get(0).code());
+        assertEquals("$.operator", unregistered.get(0).astPath());
+        assertEquals("taxId", unregistered.get(0).selector());
+    }
+
+    @Test
     void rejectsInvalidArgumentWithTypedValidator() {
         SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
@@ -400,6 +543,15 @@ class RsqlSearchGuardTest {
                 assertThrows(RsqlFilterValidationException.class, () -> guard.specification("taxId==", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.PARSE_ERROR);
+    }
+
+    @Test
+    void rejectsNullRsqlAsLimitViolation() {
+        SearchDefinition<TestTypes.Product> definition = filters();
+        RsqlFilterValidationException exception =
+                assertThrows(RsqlFilterValidationException.class, () -> guard.specification(null, definition));
+
+        assertValidationCode(exception, RsqlFilterValidationException.LIMIT_EXCEEDED);
     }
 
     @Test
@@ -471,6 +623,46 @@ class RsqlSearchGuardTest {
                 () -> guard.specification("taxId==20123456789,email==person@example.com", definition));
 
         assertProtectionRule(exception, "filter.max-or-branches");
+    }
+
+    @Test
+    void recordsNestedOrMetadataWithTerminalJoinRoots() {
+        SearchDefinition<Product> definition = SearchDefinition.builder()
+                .entity(Product.class)
+                .fields(fields -> {
+                    fields.add("categoryCode", String.class)
+                            .path("category.code")
+                            .filterable(filter -> filter.allow(EQUAL));
+                    fields.add("sku", String.class)
+                            .filterable(filter -> filter.allow(EQUAL));
+                })
+                .build();
+        RsqlRulesValidator validator = validator(definition, SearchRsqlEngine.defaults().operators());
+
+        List<RsqlValidationError> errors = validator.validate(SearchRsqlEngine.defaults()
+                .parse("(categoryCode==laptops;sku==ABC),(sku==DEF)"));
+
+        assertEquals(List.of(), errors);
+    }
+
+    @Test
+    void privateRsqlHelpersHandleUnsupportedNodesAndRootPaths() throws ReflectiveOperationException {
+        Method requiresDistinct = RsqlSearchGuard.class.getDeclaredMethod(
+                "requiresDistinct",
+                Node.class,
+                SearchDefinition.class);
+        requiresDistinct.setAccessible(true);
+        Method rootPath = RsqlRulesValidator.class.getDeclaredMethod("rootPath", String.class);
+        rootPath.setAccessible(true);
+        Method orMetadata = RsqlRulesValidator.class.getDeclaredMethod("orMetadata", OrNode.class);
+        orMetadata.setAccessible(true);
+
+        assertEquals(false, requiresDistinct.invoke(null, new UnsupportedNode(), filters()));
+        assertEquals("category", rootPath.invoke(null, "category"));
+        assertEquals("category", rootPath.invoke(null, "category.code"));
+        assertNotNull(orMetadata.invoke(
+                validator(filters(), SearchRsqlEngine.defaults().operators()),
+                new OrNode(List.of(new UnsupportedNode()))));
     }
 
     @Test
@@ -563,5 +755,34 @@ class RsqlSearchGuardTest {
     private static void assertProtectionRule(SearchProtectionException exception, String expectedRule) {
         assertEquals(SearchProtectionException.PROTECTION_RULE_EXCEEDED, exception.code());
         assertEquals(expectedRule, exception.rule());
+    }
+
+    private static RsqlRulesValidator validator(
+            SearchDefinition<?> definition,
+            RsqlOperatorRegistry operators) {
+        return new RsqlRulesValidator(
+                definition,
+                ApplicationConversionService.getSharedInstance(),
+                SearchPolicy.defaults().rsql(),
+                new SearchProtectionContext(SearchPolicy.defaults(), SearchCompilationMode.PAGE),
+                operators);
+    }
+
+    private static RsqlAst ast(Node node) throws ReflectiveOperationException {
+        Constructor<RsqlAst> constructor = RsqlAst.class.getDeclaredConstructor(Node.class, List.class);
+        constructor.setAccessible(true);
+        return constructor.newInstance(node, List.of());
+    }
+
+    private static final class UnsupportedNode implements Node {
+        @Override
+        public <R, A> R accept(RSQLVisitor<R, A> visitor, A param) {
+            return null;
+        }
+
+        @Override
+        public <R, A> R accept(RSQLVisitor<R, A> visitor) {
+            return null;
+        }
     }
 }
