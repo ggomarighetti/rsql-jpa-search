@@ -8,7 +8,6 @@ import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidation
 import io.github.ggomarighetti.searchhelper.exception.SearchPageableValidationException;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductRepository;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSeeder.Catalog;
-import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSpecifications;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.integration.postgres.PostgresTestEnvironment;
 import io.github.ggomarighetti.searchhelper.jpa.JpaSearchDefinitionValidator;
