@@ -111,19 +111,23 @@ class SearchProtectionTest {
                 .orElseThrow();
 
         SearchProtectionContext protection = new SearchProtectionContext(policy, SearchCompilationMode.PAGE);
+        var nameField = definition.field("name").orElseThrow();
+        List<String> escapedArguments = List.of("abc\\*");
         assertDoesNotThrow(() -> protection.recordComparison(
-                definition.field("name").orElseThrow(),
+                nameField,
                 descriptor,
                 1,
-                List.of("abc\\*")));
+                escapedArguments));
 
+        SearchProtectionContext wildcardProtection = new SearchProtectionContext(policy, SearchCompilationMode.PAGE);
+        List<String> wildcardArguments = List.of("abc*");
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> new SearchProtectionContext(policy, SearchCompilationMode.PAGE).recordComparison(
-                        definition.field("name").orElseThrow(),
+                () -> wildcardProtection.recordComparison(
+                        nameField,
                         descriptor,
                         1,
-                        List.of("abc*")));
+                        wildcardArguments));
 
         assertRule(exception, "filter.like.allow-trailing-wildcard", 1, 0);
     }
