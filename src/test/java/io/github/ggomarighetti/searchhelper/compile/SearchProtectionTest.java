@@ -146,19 +146,20 @@ class SearchProtectionTest {
                 .paging()
                 .build();
 
+        PageRequest pageRequest = PageRequest.of(0, 10);
         SearchProtectionException pageException = assertThrows(
                 SearchProtectionException.class,
                 () -> compiler.compile(
                         "reviewRating==5",
                         null,
-                        PageRequest.of(0, 10),
+                        pageRequest,
                         definition));
 
         assertRule(pageException, "paging.page.allow-to-many-count", 1, 0);
         assertDoesNotThrow(() -> compiler.compileSlice(
                 "reviewRating==5",
                 null,
-                PageRequest.of(0, 10),
+                pageRequest,
                 definition));
     }
 
