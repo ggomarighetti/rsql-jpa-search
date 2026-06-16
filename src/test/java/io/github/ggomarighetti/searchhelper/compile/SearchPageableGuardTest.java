@@ -172,9 +172,11 @@ class SearchPageableGuardTest {
 
     @Test
     void rejectsSortDirectionThatIsNotAllowed() {
+        PageRequest pageRequest = PageRequest.of(0, 25, Sort.by(Sort.Order.asc("createdAt")));
+        SearchDefinition<TestTypes.Product> definition = definition();
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 25, Sort.by(Sort.Order.asc("createdAt"))), definition()));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.SORT_RULES_FORBIDDEN);
     }
