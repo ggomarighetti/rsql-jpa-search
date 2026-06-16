@@ -271,11 +271,11 @@ class SearchPageableGuardTest {
 
     @Test
     void rejectsSortSafetyLimits() {
+        SearchDefinition<TestTypes.Product> definition = definition();
+        PageRequest tooManySorts = PageRequest.of(0, 25, Sort.by("customerName", "amount", "createdAt", "email"));
         SearchPageableValidationException tooManyOrders = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25, Sort.by("customerName", "amount", "createdAt", "email")),
-                        definition()));
+                () -> guard.pageable(tooManySorts, definition));
         SearchPageableValidationException duplicatedSelector = assertThrows(
                 SearchPageableValidationException.class,
                 () -> guard.pageable(
