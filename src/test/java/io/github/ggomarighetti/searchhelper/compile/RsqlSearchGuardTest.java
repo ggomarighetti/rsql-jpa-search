@@ -395,8 +395,9 @@ class RsqlSearchGuardTest {
 
     @Test
     void returnsParseViolationWhenRsqlCannotBeParsed() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception =
-                assertThrows(RsqlFilterValidationException.class, () -> guard.specification("taxId==", filters()));
+                assertThrows(RsqlFilterValidationException.class, () -> guard.specification("taxId==", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.PARSE_ERROR);
     }
