@@ -203,8 +203,9 @@ class RsqlPropertyTest {
             String input,
             SearchDefinition<Product> definition,
             String expectedRule) {
+        RsqlSearchGuard guard = new RsqlSearchGuard();
         SearchProtectionException exception =
-                assertThrows(SearchProtectionException.class, () -> new RsqlSearchGuard().specification(input, definition));
+                assertThrows(SearchProtectionException.class, () -> guard.specification(input, definition));
         assertEquals(SearchProtectionException.PROTECTION_RULE_EXCEEDED, exception.code(), input);
         assertEquals(expectedRule, exception.rule(), input);
     }
