@@ -362,9 +362,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsAnyInvalidArgumentOfMultiValueOperators() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("taxId=in=(20123456789,123)", filters()));
+                () -> guard.specification("taxId=in=(20123456789,123)", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         assertEquals(1, exception.errors().size());
