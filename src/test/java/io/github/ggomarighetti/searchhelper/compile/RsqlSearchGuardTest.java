@@ -450,10 +450,11 @@ class RsqlSearchGuardTest {
         RsqlFilterValidationException depth = assertThrows(
                 RsqlFilterValidationException.class,
                 () -> guard.specification(filter, depthDefinition));
+        SearchDefinition<TestTypes.Product> childrenDefinition =
+                filters(limits -> limits.rsql(rsql -> rsql.maxLogicalChildren(1)));
         RsqlFilterValidationException children = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification(filter,
-                        filters(limits -> limits.rsql(rsql -> rsql.maxLogicalChildren(1)))));
+                () -> guard.specification(filter, childrenDefinition));
 
         assertValidationCode(nodes, RsqlFilterValidationException.LIMIT_EXCEEDED);
         assertProtectionRule(comparisons, "filter.max-comparisons");
