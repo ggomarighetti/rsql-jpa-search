@@ -294,9 +294,10 @@ class ProductSearchPostgresIT {
             String filter,
             SearchDefinition<Product> definition,
             String expectedCode) {
+        PageRequest pageRequest = PageRequest.of(0, 1);
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> compiler.compile(filter, null, PageRequest.of(0, 1), definition));
+                () -> compiler.compile(filter, null, pageRequest, definition));
 
         assertEquals(expectedCode, exception.code());
     }
