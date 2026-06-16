@@ -243,7 +243,7 @@ class SearchCompilerTest {
                 () -> customCompiler.compile(null, null, pageRequest, definition));
         assertThrows(
                 IllegalStateException.class,
-                () -> customCompiler.compile(null, null, PageRequest.of(0, 10), definition));
+                () -> customCompiler.compile(null, null, pageRequest, definition));
 
         assertEquals(2, validations.get());
     }
