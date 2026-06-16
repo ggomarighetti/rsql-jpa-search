@@ -2,7 +2,6 @@ package io.github.ggomarighetti.searchhelper.compile;
 
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.SearchPageableValidationException;
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import java.math.BigDecimal;
@@ -15,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.data.domain.Sort.Direction.ASC;
@@ -77,13 +75,12 @@ class SearchPageableGuardTest {
     @Test
     void rejectsDifferentSortSelectorsThatResolveToSameInternalPath() {
         SearchDefinition<TestTypes.Product> definition = duplicateSortPathDefinition();
+        PageRequest pageRequest = PageRequest.of(0, 25,
+                Sort.by(Sort.Order.asc("legacyAmount"), Sort.Order.desc("amount")));
 
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25,
-                                Sort.by(Sort.Order.asc("legacyAmount"), Sort.Order.desc("amount"))),
-                        definition));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.SORT_LIMIT_EXCEEDED);
     }
@@ -107,9 +104,11 @@ class SearchPageableGuardTest {
 
     @Test
     void rejectsUnpagedPageableByDefault() {
+        Pageable pageable = Pageable.unpaged();
+        SearchDefinition<TestTypes.Product> definition = definition();
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(Pageable.unpaged(), definition()));
+                () -> guard.pageable(pageable, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
     }
@@ -133,12 +132,12 @@ class SearchPageableGuardTest {
 
     @Test
     void rejectsUnpagedLimitAboveConfiguredMaximum() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                SearchPolicy.builder()
-                        .paging(paging -> paging
-                                .maxUnpagedSize(10)
-                                .unpagedSize(11))
-                        .build());
+        var builder = SearchPolicy.builder()
+                .paging(paging -> paging
+                        .maxUnpagedSize(10)
+                        .unpagedSize(11));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
 
         assertEquals(
                 "paging.defaultUnpagedSize must be less than or equal to paging.maxUnpagedSize",
@@ -147,9 +146,11 @@ class SearchPageableGuardTest {
 
     @Test
     void rejectsUnknownSortSelector() {
+        PageRequest pageRequest = PageRequest.of(0, 25, Sort.by("passwordHash"));
+        SearchDefinition<TestTypes.Product> definition = definition();
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 25, Sort.by("passwordHash")), definition()));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.SORT_RULES_FORBIDDEN);
     }
@@ -160,19 +161,22 @@ class SearchPageableGuardTest {
                 .fields(fields -> fields.add("email", String.class))
                 .paging()
                 .build();
+        PageRequest pageRequest = PageRequest.of(0, 25, Sort.by("email"));
 
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 25, Sort.by("email")), definition));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.SORT_RULES_FORBIDDEN);
     }
 
     @Test
     void rejectsSortDirectionThatIsNotAllowed() {
+        PageRequest pageRequest = PageRequest.of(0, 25, Sort.by(Sort.Order.asc("createdAt")));
+        SearchDefinition<TestTypes.Product> definition = definition();
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 25, Sort.by(Sort.Order.asc("createdAt"))), definition()));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.SORT_RULES_FORBIDDEN);
     }
@@ -182,10 +186,11 @@ class SearchPageableGuardTest {
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
                 .fields(fields -> fields.add("email", String.class).sortable())
                 .build();
+        PageRequest pageRequest = PageRequest.of(0, 25);
 
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 25), definition));
+                () -> guard.pageable(pageRequest, definition));
 
         assertValidationCode(exception, SearchPageableValidationException.PAGE_RULES_FORBIDDEN);
     }
@@ -198,12 +203,14 @@ class SearchPageableGuardTest {
 
         assertEquals(3, guard.pageable(PageRequest.of(3, 50), definition).getPageNumber());
 
+        PageRequest invalidPage = PageRequest.of(4, 50);
         SearchPageableValidationException pageException = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(4, 50), definition));
+                () -> guard.pageable(invalidPage, definition));
+        PageRequest invalidSize = PageRequest.of(0, 101);
         SearchPageableValidationException sizeException = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 101), definition));
+                () -> guard.pageable(invalidSize, definition));
 
         assertValidationCode(pageException, SearchPageableValidationException.PAGE_RULES_FORBIDDEN);
         assertValidationCode(sizeException, SearchPageableValidationException.PAGE_RULES_FORBIDDEN);
@@ -211,22 +218,29 @@ class SearchPageableGuardTest {
         assertTrue(pageException.violations().get(0).constraint().endsWith(".Max"));
         assertEquals("size", sizeException.violations().get(0).path());
         assertTrue(sizeException.violations().get(0).constraint().endsWith(".Max"));
-        assertThrows(UnsupportedOperationException.class, () -> pageException.violations().clear());
+        var violations = pageException.violations();
+        assertThrows(UnsupportedOperationException.class, violations::clear);
     }
 
     @Test
     void rejectsPageableSafetyLimitsBeforeHibernateRules() {
+        SearchDefinition<TestTypes.Product> definition = definition();
+        PageRequest invalidPage = PageRequest.of(101, 1);
         SearchPageableValidationException pageException = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(101, 1), definition()));
+                () -> guard.pageable(invalidPage, definition));
+        PageRequest invalidSize = PageRequest.of(0, 101);
         SearchPageableValidationException sizeException = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(0, 101), definition()));
+                () -> guard.pageable(invalidSize, definition));
+        SearchPolicy offsetPolicy = SearchPolicy.builder()
+                .paging(paging -> paging.maxPage(200).maxSize(200))
+                .build();
+        SearchDefinition<TestTypes.Product> offsetDefinition = definition(offsetPolicy);
+        PageRequest offsetPage = PageRequest.of(100, 101);
         SearchPageableValidationException offsetException = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(PageRequest.of(100, 101), definition(SearchPolicy.builder()
-                        .paging(paging -> paging.maxPage(200).maxSize(200))
-                        .build())));
+                () -> guard.pageable(offsetPage, offsetDefinition));
 
         assertValidationCode(pageException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
         assertValidationCode(sizeException, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
@@ -248,35 +262,33 @@ class SearchPageableGuardTest {
         assertTrue(boundedUnpaged.isPaged());
         assertEquals(40, boundedUnpaged.getPageSize());
 
+        PageRequest oversizedPage = PageRequest.of(0, 6);
         SearchPageableValidationException exception = assertThrows(
                 SearchPageableValidationException.class,
-                () -> limitedGuard.pageable(PageRequest.of(0, 6), definition));
+                () -> limitedGuard.pageable(oversizedPage, definition));
         assertValidationCode(exception, SearchPageableValidationException.PAGE_LIMIT_EXCEEDED);
     }
 
     @Test
     void rejectsSortSafetyLimits() {
+        SearchDefinition<TestTypes.Product> definition = definition();
+        PageRequest tooManySorts = PageRequest.of(0, 25, Sort.by("customerName", "amount", "createdAt", "email"));
         SearchPageableValidationException tooManyOrders = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25, Sort.by("customerName", "amount", "createdAt", "email")),
-                        definition()));
+                () -> guard.pageable(tooManySorts, definition));
+        PageRequest duplicatedSort = PageRequest.of(0, 25,
+                Sort.by(Sort.Order.asc("customerName"), Sort.Order.desc("customerName")));
         SearchPageableValidationException duplicatedSelector = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25,
-                                Sort.by(Sort.Order.asc("customerName"), Sort.Order.desc("customerName"))),
-                        definition()));
+                () -> guard.pageable(duplicatedSort, definition));
+        PageRequest ignoreCaseSort = PageRequest.of(0, 25, Sort.by(Sort.Order.asc("amount").ignoreCase()));
         SearchPageableValidationException ignoreCase = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25, Sort.by(Sort.Order.asc("amount").ignoreCase())),
-                        definition()));
+                () -> guard.pageable(ignoreCaseSort, definition));
+        PageRequest nullHandlingSort = PageRequest.of(0, 25, Sort.by(Sort.Order.asc("amount").nullsLast()));
         SearchPageableValidationException nullHandling = assertThrows(
                 SearchPageableValidationException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25, Sort.by(Sort.Order.asc("amount").nullsLast())),
-                        definition()));
+                () -> guard.pageable(nullHandlingSort, definition));
 
         assertValidationCode(tooManyOrders, SearchPageableValidationException.SORT_LIMIT_EXCEEDED);
         assertValidationCode(duplicatedSelector, SearchPageableValidationException.SORT_LIMIT_EXCEEDED);

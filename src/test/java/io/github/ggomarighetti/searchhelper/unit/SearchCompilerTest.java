@@ -4,9 +4,7 @@ import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.compile.CompiledSearch;
 import io.github.ggomarighetti.searchhelper.compile.SearchCompiler;
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
-import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators;
 import io.github.ggomarighetti.searchhelper.rsql.SearchRsqlEngine;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -130,17 +128,19 @@ class SearchCompilerTest {
     void rejectsNullApplicationSpecifications() {
         @SuppressWarnings("unchecked")
         Specification<TestTypes.Product>[] nullSpecifications = null;
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        SearchDefinition<TestTypes.Product> definition = emptyDefinition();
 
         NullPointerException arrayException = assertThrows(
                 NullPointerException.class,
-                () -> compiler.compile(null, null, PageRequest.of(0, 10), emptyDefinition(), nullSpecifications));
+                () -> compiler.compile(null, null, pageRequest, definition, nullSpecifications));
         NullPointerException elementException = assertThrows(
                 NullPointerException.class,
                 () -> compiler.compile(
                         null,
                         null,
-                        PageRequest.of(0, 10),
-                        emptyDefinition(),
+                        pageRequest,
+                        definition,
                         (Specification<TestTypes.Product>) null));
 
         assertEquals("specifications must not be null", arrayException.getMessage());
@@ -197,14 +197,16 @@ class SearchCompilerTest {
                         .conversionService(ApplicationConversionService.getSharedInstance())
                         .build(),
                 policy);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        SearchDefinition<TestTypes.Product> definition = definition(new AtomicReference<>());
 
         assertThrows(
                 SearchProtectionException.class,
                 () -> customCompiler.compile(
                         "taxId=in=(1,2)",
                         null,
-                        PageRequest.of(0, 10),
-                definition(new AtomicReference<>())));
+                        pageRequest,
+                        definition));
     }
 
     @Test
@@ -234,13 +236,14 @@ class SearchCompilerTest {
                     throw new IllegalStateException("invalid definition");
                 }));
         SearchDefinition<TestTypes.Product> definition = emptyDefinition();
+        PageRequest pageRequest = PageRequest.of(0, 10);
 
         assertThrows(
                 IllegalStateException.class,
-                () -> customCompiler.compile(null, null, PageRequest.of(0, 10), definition));
+                () -> customCompiler.compile(null, null, pageRequest, definition));
         assertThrows(
                 IllegalStateException.class,
-                () -> customCompiler.compile(null, null, PageRequest.of(0, 10), definition));
+                () -> customCompiler.compile(null, null, pageRequest, definition));
 
         assertEquals(2, validations.get());
     }

@@ -6,13 +6,10 @@ import io.github.ggomarighetti.searchhelper.exception.RsqlValidationError;
 import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.filter.FilterOperator;
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Status;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
 import io.github.ggomarighetti.searchhelper.rsql.backend.RsqlBackendAdapter;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperator;
 import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperatorDescriptor;
-import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators;
 import io.github.ggomarighetti.searchhelper.rsql.RsqlCompilationRequest;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import io.github.ggomarighetti.searchhelper.rsql.SearchRsqlEngine;
@@ -214,7 +211,8 @@ class RsqlSearchGuardTest {
 
         assertEquals("=first=", descriptor.symbol());
         assertEquals(List.of("=first=", "=second="), descriptor.symbols().stream().toList());
-        assertThrows(UnsupportedOperationException.class, () -> descriptor.symbols().clear());
+        var symbols = descriptor.symbols();
+        assertThrows(UnsupportedOperationException.class, symbols::clear);
     }
 
     @Test
@@ -317,9 +315,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsUnknownField() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("passwordHash==abc", filters()));
+                () -> guard.specification("passwordHash==abc", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         assertEquals(1, exception.errors().size());
@@ -331,9 +330,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsOperatorNotAllowedForField() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("taxId!=20123456789", filters()));
+                () -> guard.specification("taxId!=20123456789", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         RsqlValidationError error = exception.errors().get(0);
@@ -345,9 +345,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsInvalidArgumentWithTypedValidator() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("taxId==123", filters()));
+                () -> guard.specification("taxId==123", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         RsqlValidationError error = exception.errors().get(0);
@@ -361,9 +362,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsAnyInvalidArgumentOfMultiValueOperators() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("taxId=in=(20123456789,123)", filters()));
+                () -> guard.specification("taxId=in=(20123456789,123)", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         assertEquals(1, exception.errors().size());
@@ -373,9 +375,10 @@ class RsqlSearchGuardTest {
 
     @Test
     void returnsRulesForbiddenWhenParsedFilterBreaksMultipleRules() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("passwordHash==abc;email!=not-an-email", filters()));
+                () -> guard.specification("passwordHash==abc;email!=not-an-email", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.RULES_FORBIDDEN);
         assertEquals(2, exception.errors().size());
@@ -392,28 +395,31 @@ class RsqlSearchGuardTest {
 
     @Test
     void returnsParseViolationWhenRsqlCannotBeParsed() {
+        SearchDefinition<TestTypes.Product> definition = filters();
         RsqlFilterValidationException exception =
-                assertThrows(RsqlFilterValidationException.class, () -> guard.specification("taxId==", filters()));
+                assertThrows(RsqlFilterValidationException.class, () -> guard.specification("taxId==", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.PARSE_ERROR);
     }
 
     @Test
     void rejectsRsqlRawInputLongerThanLimit() {
+        SearchDefinition<TestTypes.Product> definition = filters(limits -> limits
+                .rsql(rsql -> rsql.maxLength(10)));
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("taxId==20123456789", filters(limits -> limits
-                        .rsql(rsql -> rsql.maxLength(10)))));
+                () -> guard.specification("taxId==20123456789", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.LIMIT_EXCEEDED);
     }
 
     @Test
     void rejectsRsqlParenthesesNestingBeforeParsing() {
+        SearchDefinition<TestTypes.Product> definition = filters(limits -> limits
+                .rsql(rsql -> rsql.maxParenthesesDepth(2)));
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification("(((taxId==20123456789)))", filters(limits -> limits
-                        .rsql(rsql -> rsql.maxParenthesesDepth(2)))));
+                () -> guard.specification("(((taxId==20123456789)))", definition));
 
         assertValidationCode(exception, RsqlFilterValidationException.LIMIT_EXCEEDED);
     }
@@ -431,19 +437,24 @@ class RsqlSearchGuardTest {
     void rejectsRsqlAstNodeComparisonDepthAndLogicalChildLimits() {
         String filter = "taxId==20123456789;email==person@example.com";
 
+        SearchDefinition<TestTypes.Product> nodesDefinition = filters(limits -> limits.rsql(rsql -> rsql.maxNodes(1)));
         RsqlFilterValidationException nodes = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification(filter, filters(limits -> limits.rsql(rsql -> rsql.maxNodes(1)))));
+                () -> guard.specification(filter, nodesDefinition));
+        SearchDefinition<TestTypes.Product> comparisonsDefinition =
+                filters(limits -> limits.filter(value -> value.maxComparisons(1)));
         SearchProtectionException comparisons = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.specification(filter, filters(limits -> limits.filter(value -> value.maxComparisons(1)))));
+                () -> guard.specification(filter, comparisonsDefinition));
+        SearchDefinition<TestTypes.Product> depthDefinition = filters(limits -> limits.rsql(rsql -> rsql.maxDepth(1)));
         RsqlFilterValidationException depth = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification(filter, filters(limits -> limits.rsql(rsql -> rsql.maxDepth(1)))));
+                () -> guard.specification(filter, depthDefinition));
+        SearchDefinition<TestTypes.Product> childrenDefinition =
+                filters(limits -> limits.rsql(rsql -> rsql.maxLogicalChildren(1)));
         RsqlFilterValidationException children = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> guard.specification(filter,
-                        filters(limits -> limits.rsql(rsql -> rsql.maxLogicalChildren(1)))));
+                () -> guard.specification(filter, childrenDefinition));
 
         assertValidationCode(nodes, RsqlFilterValidationException.LIMIT_EXCEEDED);
         assertProtectionRule(comparisons, "filter.max-comparisons");
@@ -453,29 +464,34 @@ class RsqlSearchGuardTest {
 
     @Test
     void rejectsRsqlOrBranchLimit() {
+        SearchDefinition<TestTypes.Product> definition = filters(limits -> limits
+                .filter(filter -> filter.maxOrBranches(1)));
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.specification("taxId==20123456789,email==person@example.com", filters(limits -> limits
-                        .filter(filter -> filter.maxOrBranches(1)))));
+                () -> guard.specification("taxId==20123456789,email==person@example.com", definition));
 
         assertProtectionRule(exception, "filter.max-or-branches");
     }
 
     @Test
     void rejectsRsqlArgumentLimitsBeforeConversionAndRules() {
+        SearchDefinition<TestTypes.Product> perComparisonDefinition = filters(limits -> limits
+                .filter(filter -> filter.maxArgumentsPerComparison(1)));
         SearchProtectionException perComparison = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.specification("taxId=in=(20123456789,20987654321)", filters(limits -> limits
-                        .filter(filter -> filter.maxArgumentsPerComparison(1)))));
+                () -> guard.specification("taxId=in=(20123456789,20987654321)", perComparisonDefinition));
+        SearchDefinition<TestTypes.Product> totalDefinition =
+                filters(limits -> limits.filter(filter -> filter.maxArgumentsTotal(3)));
         SearchProtectionException total = assertThrows(
                 SearchProtectionException.class,
                 () -> guard.specification(
                         "taxId=in=(20123456789,20987654321);taxId=in=(30123456789,30987654321)",
-                        filters(limits -> limits.filter(filter -> filter.maxArgumentsTotal(3)))));
+                        totalDefinition));
+        SearchDefinition<TestTypes.Product> lengthDefinition = filters(limits -> limits
+                .filter(filter -> filter.maxArgumentLength(5)));
         SearchProtectionException length = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.specification("email==person@example.com", filters(limits -> limits
-                        .filter(filter -> filter.maxArgumentLength(5)))));
+                () -> guard.specification("email==person@example.com", lengthDefinition));
 
         assertProtectionRule(perComparison, "filter.max-arguments-per-comparison");
         assertProtectionRule(total, "filter.max-arguments-total");

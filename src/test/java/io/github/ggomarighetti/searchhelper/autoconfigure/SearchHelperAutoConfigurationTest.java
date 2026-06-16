@@ -4,7 +4,6 @@ import io.github.ggomarighetti.searchhelper.compile.SearchCompiler;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinitionFactory;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -75,12 +74,13 @@ class SearchHelperAutoConfigurationTest {
                             .paging()
                             .build();
 
+                    var pageRequest = org.springframework.data.domain.PageRequest.of(0, 25);
                     assertThrows(
                             SearchProtectionException.class,
                             () -> compiler.compile(
                                     "taxId=in=(1,2)",
                                     null,
-                                    org.springframework.data.domain.PageRequest.of(0, 25),
+                                    pageRequest,
                                     definition));
                 });
     }

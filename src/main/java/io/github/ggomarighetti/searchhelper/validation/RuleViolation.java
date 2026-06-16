@@ -23,10 +23,10 @@ public record RuleViolation(
 
     /** Validates all safe violation fields. */
     public RuleViolation {
-        path = Objects.requireNonNull(path, "path must not be null");
-        message = Objects.requireNonNull(message, "message must not be null");
-        messageTemplate = Objects.requireNonNull(messageTemplate, "messageTemplate must not be null");
-        constraint = Objects.requireNonNull(constraint, "constraint must not be null");
+        Objects.requireNonNull(path, "path must not be null");
+        Objects.requireNonNull(message, "message must not be null");
+        Objects.requireNonNull(messageTemplate, "messageTemplate must not be null");
+        Objects.requireNonNull(constraint, "constraint must not be null");
     }
 
     /**

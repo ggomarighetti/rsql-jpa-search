@@ -3,7 +3,6 @@ package io.github.ggomarighetti.searchhelper.integration;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSpecifications;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
-import io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;

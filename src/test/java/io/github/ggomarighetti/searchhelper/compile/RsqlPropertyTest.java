@@ -1,6 +1,5 @@
 package io.github.ggomarighetti.searchhelper.compile;
 
-import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.EQUAL;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,13 +47,12 @@ class RsqlPropertyTest {
 
         for (int i = 0; i < 250; i++) {
             String input = generator.comparisonWithUnknownSelector();
-            try {
-                guard.specification(input, definition);
-                fail("Unknown selector unexpectedly compiled: " + escaped(input));
-            } catch (Throwable throwable) {
-                if (!SearchPropertyFixtures.isExpectedRsqlThrowable(throwable)) {
-                    fail("Unexpected throwable for unknown selector input [" + escaped(input) + "]", throwable);
-                }
+            Throwable throwable = assertThrows(
+                    Throwable.class,
+                    () -> guard.specification(input, definition),
+                    "Unknown selector unexpectedly compiled: " + escaped(input));
+            if (!SearchPropertyFixtures.isExpectedRsqlThrowable(throwable)) {
+                fail("Unexpected throwable for unknown selector input [" + escaped(input) + "]", throwable);
             }
         }
     }
@@ -67,13 +65,12 @@ class RsqlPropertyTest {
 
         for (int i = 0; i < 250; i++) {
             String input = generator.comparisonWithDisallowedOperator();
-            try {
-                guard.specification(input, definition);
-                fail("Disallowed operator unexpectedly compiled: " + escaped(input));
-            } catch (Throwable throwable) {
-                if (!SearchPropertyFixtures.isExpectedRsqlThrowable(throwable)) {
-                    fail("Unexpected throwable for disallowed operator input [" + escaped(input) + "]", throwable);
-                }
+            Throwable throwable = assertThrows(
+                    Throwable.class,
+                    () -> guard.specification(input, definition),
+                    "Disallowed operator unexpectedly compiled: " + escaped(input));
+            if (!SearchPropertyFixtures.isExpectedRsqlThrowable(throwable)) {
+                fail("Unexpected throwable for disallowed operator input [" + escaped(input) + "]", throwable);
             }
         }
     }
@@ -196,8 +193,9 @@ class RsqlPropertyTest {
     }
 
     private static void assertLimitExceeded(String input, SearchDefinition<Product> definition) {
+        RsqlSearchGuard guard = new RsqlSearchGuard();
         RsqlFilterValidationException exception =
-                assertThrows(RsqlFilterValidationException.class, () -> new RsqlSearchGuard().specification(input, definition));
+                assertThrows(RsqlFilterValidationException.class, () -> guard.specification(input, definition));
         assertEquals(RsqlFilterValidationException.LIMIT_EXCEEDED, exception.code(), input);
     }
 
@@ -205,8 +203,9 @@ class RsqlPropertyTest {
             String input,
             SearchDefinition<Product> definition,
             String expectedRule) {
+        RsqlSearchGuard guard = new RsqlSearchGuard();
         SearchProtectionException exception =
-                assertThrows(SearchProtectionException.class, () -> new RsqlSearchGuard().specification(input, definition));
+                assertThrows(SearchProtectionException.class, () -> guard.specification(input, definition));
         assertEquals(SearchProtectionException.PROTECTION_RULE_EXCEEDED, exception.code(), input);
         assertEquals(expectedRule, exception.rule(), input);
     }

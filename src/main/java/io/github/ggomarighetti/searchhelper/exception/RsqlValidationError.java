@@ -38,9 +38,9 @@ public record RsqlValidationError(
 
     /** Validates required location and message fields. */
     public RsqlValidationError {
-        code = requireText(code, "code");
-        astPath = requireText(astPath, "astPath");
-        message = requireText(message, "message");
+        requireText(code, "code");
+        requireText(astPath, "astPath");
+        requireText(message, "message");
         if (argumentIndex != null && argumentIndex < 0) {
             throw new IllegalArgumentException("argumentIndex must not be negative");
         }

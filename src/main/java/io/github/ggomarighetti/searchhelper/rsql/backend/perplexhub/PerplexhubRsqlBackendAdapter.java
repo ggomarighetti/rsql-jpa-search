@@ -97,8 +97,8 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
                 converter);
     }
 
-    private static RsqlJpaPredicateContext context(RSQLCustomPredicateInput input, RsqlOperator operator) {
-        return new RsqlJpaPredicateContext(
+    private static RsqlJpaPredicateContext<?, ?, ?, ?, ?> context(RSQLCustomPredicateInput input, RsqlOperator operator) {
+        return new RsqlJpaPredicateContext<>(
                 input.getCriteriaBuilder(),
                 input.getPath(),
                 input.getAttribute(),
@@ -175,7 +175,7 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
                 ComparisonNode comparison,
                 RSQLJPAPredicateConverter converter,
                 From<?, ?> root) {
-            return (Predicate) comparison.accept(converter, (From) root);
+            return (Predicate) comparison.accept(converter, root);
         }
     }
 }

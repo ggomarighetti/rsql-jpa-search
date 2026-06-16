@@ -7,9 +7,7 @@ import io.github.ggomarighetti.searchhelper.exception.RsqlFilterValidationExcept
 import io.github.ggomarighetti.searchhelper.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.searchhelper.exception.SearchPageableValidationException;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductRepository;
-import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSeeder;
 import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSeeder.Catalog;
-import io.github.ggomarighetti.searchhelper.integration.bench.dao.ProductSpecifications;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.integration.postgres.PostgresTestEnvironment;
 import io.github.ggomarighetti.searchhelper.jpa.JpaSearchDefinitionValidator;
@@ -21,12 +19,9 @@ import org.springframework.boot.convert.ApplicationConversionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
-import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -35,7 +30,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -46,8 +40,6 @@ import static io.github.ggomarighetti.searchhelper.rsql.operator.RsqlOperators.E
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.springframework.data.domain.Sort.Direction.ASC;
-import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @DataJpaTest(
         showSql = false,
@@ -241,19 +233,21 @@ class ProductSearchPostgresIT {
         assertRsqlCode("status==PUBLISHED", definition, RsqlFilterValidationException.RULES_FORBIDDEN);
         assertRsqlCode("publicId==not-a-uuid", definition, RsqlFilterValidationException.RULES_FORBIDDEN);
 
+        PageRequest unsafeSort = PageRequest.of(0, 10, Sort.by("internalCost"));
         SearchPageableValidationException sortException = assertThrows(
                 SearchPageableValidationException.class,
                 () -> compiler.compile(
                         null,
                         null,
-                        PageRequest.of(0, 10, Sort.by("internalCost")),
+                        unsafeSort,
                         definition));
+        PageRequest unsafePage = PageRequest.of(0, 51);
         SearchPageableValidationException pageException = assertThrows(
                 SearchPageableValidationException.class,
                 () -> compiler.compile(
                         null,
                         null,
-                        PageRequest.of(0, 51),
+                        unsafePage,
                         definition));
 
         assertEquals(SearchPageableValidationException.SORT_RULES_FORBIDDEN, sortException.code());
@@ -271,10 +265,11 @@ class ProductSearchPostgresIT {
                 .fields(fields -> fields.add("displayName", String.class)
                         .filterable(filter -> filter.allow(EQUAL)))
                 .build();
+        JpaSearchDefinitionValidator validator = jpaDefinitionValidator();
 
         SearchDefinitionValidationException exception = assertThrows(
                 SearchDefinitionValidationException.class,
-                () -> jpaDefinitionValidator().validate(definition));
+                () -> validator.validate(definition));
 
         assertEquals(SearchDefinitionValidationException.JPA_PATH_UNRESOLVED, exception.code());
     }
@@ -299,9 +294,10 @@ class ProductSearchPostgresIT {
             String filter,
             SearchDefinition<Product> definition,
             String expectedCode) {
+        PageRequest pageRequest = PageRequest.of(0, 1);
         RsqlFilterValidationException exception = assertThrows(
                 RsqlFilterValidationException.class,
-                () -> compiler.compile(filter, null, PageRequest.of(0, 1), definition));
+                () -> compiler.compile(filter, null, pageRequest, definition));
 
         assertEquals(expectedCode, exception.code());
     }

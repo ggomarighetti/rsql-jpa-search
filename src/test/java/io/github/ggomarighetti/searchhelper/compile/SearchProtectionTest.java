@@ -111,19 +111,23 @@ class SearchProtectionTest {
                 .orElseThrow();
 
         SearchProtectionContext protection = new SearchProtectionContext(policy, SearchCompilationMode.PAGE);
+        var nameField = definition.field("name").orElseThrow();
+        List<String> escapedArguments = List.of("abc\\*");
         assertDoesNotThrow(() -> protection.recordComparison(
-                definition.field("name").orElseThrow(),
+                nameField,
                 descriptor,
                 1,
-                List.of("abc\\*")));
+                escapedArguments));
 
+        SearchProtectionContext wildcardProtection = new SearchProtectionContext(policy, SearchCompilationMode.PAGE);
+        List<String> wildcardArguments = List.of("abc*");
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> new SearchProtectionContext(policy, SearchCompilationMode.PAGE).recordComparison(
-                        definition.field("name").orElseThrow(),
+                () -> wildcardProtection.recordComparison(
+                        nameField,
                         descriptor,
                         1,
-                        List.of("abc*")));
+                        wildcardArguments));
 
         assertRule(exception, "filter.like.allow-trailing-wildcard", 1, 0);
     }
@@ -142,19 +146,20 @@ class SearchProtectionTest {
                 .paging()
                 .build();
 
+        PageRequest pageRequest = PageRequest.of(0, 10);
         SearchProtectionException pageException = assertThrows(
                 SearchProtectionException.class,
                 () -> compiler.compile(
                         "reviewRating==5",
                         null,
-                        PageRequest.of(0, 10),
+                        pageRequest,
                         definition));
 
         assertRule(pageException, "paging.page.allow-to-many-count", 1, 0);
         assertDoesNotThrow(() -> compiler.compileSlice(
                 "reviewRating==5",
                 null,
-                PageRequest.of(0, 10),
+                pageRequest,
                 definition));
     }
 
@@ -190,11 +195,10 @@ class SearchProtectionTest {
                 .paging()
                 .build();
 
+        PageRequest pageRequest = PageRequest.of(0, 25, Sort.by("supplierName"));
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> guard.pageable(
-                        PageRequest.of(0, 25, Sort.by("supplierName")),
-                        definition));
+                () -> guard.pageable(pageRequest, definition));
 
         assertRule(exception, "sorting.allow-relation-sorting", 1, 0);
     }
@@ -211,9 +215,10 @@ class SearchProtectionTest {
                 .query(query -> query.specification(term -> Specification.unrestricted()))
                 .build();
 
+        Pageable pageable = Pageable.unpaged();
         SearchProtectionException exception = assertThrows(
                 SearchProtectionException.class,
-                () -> compiler.compile(null, "tablet", Pageable.unpaged(), definition));
+                () -> compiler.compile(null, "tablet", pageable, definition));
 
         assertRule(exception, "query.allow-with-unpaged", 1, 0);
     }

@@ -15,6 +15,7 @@ import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.integration.bench.domain.Status;
 import io.github.ggomarighetti.searchhelper.policy.SearchPolicy;
+import io.github.ggomarighetti.searchhelper.sort.SearchSorting;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
@@ -120,7 +121,7 @@ public final class SearchPropertyFixtures {
                             .sortable(sort -> sort.allow(Sort.Direction.DESC));
                     fields.add("supplierName", String.class)
                             .path("supplier.name")
-                            .sortable(sort -> sort.allowIgnoreCase());
+                            .sortable(SearchSorting.Builder::allowIgnoreCase);
                     fields.add("status", Status.class);
                 })
                 .paging()

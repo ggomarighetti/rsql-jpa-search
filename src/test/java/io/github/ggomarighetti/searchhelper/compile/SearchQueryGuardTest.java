@@ -3,7 +3,6 @@ package io.github.ggomarighetti.searchhelper.compile;
 import io.github.ggomarighetti.searchhelper.definition.SearchDefinition;
 import io.github.ggomarighetti.searchhelper.exception.SearchProtectionException;
 import io.github.ggomarighetti.searchhelper.exception.SearchQueryValidationException;
-import io.github.ggomarighetti.searchhelper.integration.bench.domain.Product;
 import io.github.ggomarighetti.searchhelper.unit.TestTypes;
 import java.util.concurrent.atomic.AtomicReference;
 import org.hibernate.validator.cfg.defs.PatternDef;
@@ -25,9 +24,10 @@ class SearchQueryGuardTest {
 
     @Test
     void rejectsQueryWhenDefinitionDoesNotDeclareQuery() {
+        SearchDefinition<TestTypes.Product> definition = definitionWithoutQuery();
         SearchQueryValidationException exception = assertThrows(
                 SearchQueryValidationException.class,
-                () -> guard.specification("tablets", definitionWithoutQuery()));
+                () -> guard.specification("tablets", definition));
 
         assertValidationCode(exception, SearchQueryValidationException.QUERY_RULES_FORBIDDEN);
     }
@@ -85,7 +85,8 @@ class SearchQueryGuardTest {
         assertEquals(
                 "{jakarta.validation.constraints.Pattern.message}",
                 patternException.violations().get(0).messageTemplate());
-        assertThrows(UnsupportedOperationException.class, () -> sizeException.violations().clear());
+        var violations = sizeException.violations();
+        assertThrows(UnsupportedOperationException.class, violations::clear);
     }
 
     @Test

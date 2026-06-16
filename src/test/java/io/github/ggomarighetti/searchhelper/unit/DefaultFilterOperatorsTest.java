@@ -107,13 +107,14 @@ class DefaultFilterOperatorsTest {
 
     @Test
     void filteringWithDefaultsCannotDenyTheEntireProfile() {
+        var builder = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("active", Boolean.class)
+                        .filterable(filter -> filter.withDefaults().deny(EQUAL, NOT_EQUAL)));
+
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> SearchDefinition.builder()
-                        .entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("active", Boolean.class)
-                                .filterable(filter -> filter.withDefaults().deny(EQUAL, NOT_EQUAL)))
-                        .build());
+                builder::build);
 
         assertEquals(
                 "selector 'active' filtering must declare at least one allowed operator",
@@ -151,12 +152,13 @@ class DefaultFilterOperatorsTest {
 
     @Test
     void reportsUnsupportedDefaultProfilesAsDefinitionErrors() {
+        var builder = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("owner", TestTypes.Owner.class).filterable());
+
         SearchDefinitionValidationException exception = assertThrows(
                 SearchDefinitionValidationException.class,
-                () -> SearchDefinition.builder()
-                        .entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("owner", TestTypes.Owner.class).filterable())
-                        .build());
+                builder::build);
 
         assertEquals(
                 SearchDefinitionValidationException.DEFAULT_OPERATORS_UNSUPPORTED_TYPE,
@@ -165,13 +167,14 @@ class DefaultFilterOperatorsTest {
 
     @Test
     void filteringWithDefaultsReportsUnsupportedProfilesAsDefinitionErrors() {
+        var builder = SearchDefinition.builder()
+                .entity(TestTypes.Product.class)
+                .fields(fields -> fields.add("owner", TestTypes.Owner.class)
+                        .filterable(filter -> filter.withDefaults().allow(IS_NULL)));
+
         SearchDefinitionValidationException exception = assertThrows(
                 SearchDefinitionValidationException.class,
-                () -> SearchDefinition.builder()
-                        .entity(TestTypes.Product.class)
-                        .fields(fields -> fields.add("owner", TestTypes.Owner.class)
-                                .filterable(filter -> filter.withDefaults().allow(IS_NULL)))
-                        .build());
+                builder::build);
 
         assertEquals(
                 SearchDefinitionValidationException.DEFAULT_OPERATORS_UNSUPPORTED_TYPE,
@@ -182,7 +185,7 @@ class DefaultFilterOperatorsTest {
     void returnedProfilesAreImmutable() {
         Set<RsqlOperator> operators = DefaultFilterOperators.forType(String.class);
 
-        assertThrows(UnsupportedOperationException.class, () -> operators.clear());
+        assertThrows(UnsupportedOperationException.class, operators::clear);
     }
 
     private static void assertContains(Class<?> type, RsqlOperator... expected) {
