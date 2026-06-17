@@ -66,6 +66,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload coverage to Codecov
+        continue-on-error: true
         uses: codecov/codecov-action@a99c28d3f0da835de33ff2feb2e15691c7b9641f
         with:
           use_oidc: true
@@ -73,10 +74,11 @@ jobs:
           disable_search: true
           flags: java
           name: java-coverage
-          fail_ci_if_error: true
+          fail_ci_if_error: false
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
+        continue-on-error: true
         uses: codecov/codecov-action@a99c28d3f0da835de33ff2feb2e15691c7b9641f
         with:
           use_oidc: true
@@ -85,7 +87,7 @@ jobs:
           report_type: test_results
           flags: java
           name: java-tests
-          fail_ci_if_error: true
+          fail_ci_if_error: false
 
       - name: SonarQube Cloud analysis
         if: ${{ env.SONAR_TOKEN != '' }}
