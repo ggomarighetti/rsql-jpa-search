@@ -96,14 +96,14 @@ Maven:
 <dependency>
   <groupId>io.github.ggomarighetti</groupId>
   <artifactId>jpa-rsql-search</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
 Gradle Kotlin DSL:
 
 ```kotlin
-implementation("io.github.ggomarighetti:jpa-rsql-search:1.0.0")
+implementation("io.github.ggomarighetti:jpa-rsql-search:1.0.1")
 ```
 
 ## Quick Example
@@ -776,7 +776,7 @@ beans to enforce additional runtime checks on completed definitions.
 
 `jpa-rsql-search` is a stable 1.x library:
 
-- current version: `1.0.0`;
+- current version: `1.0.1`;
 - releases are published to Maven Central under
   `io.github.ggomarighetti:jpa-rsql-search`;
 - the public API follows Semantic Versioning;
