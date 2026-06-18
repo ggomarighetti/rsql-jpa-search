@@ -6,7 +6,7 @@
 
   <groupId>io.github.ggomarighetti</groupId>
   <artifactId>jpa-rsql-search</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <packaging>jar</packaging>
 
   <name>jpa-rsql-search</name>
@@ -25,7 +25,7 @@
   <developers>
     <developer>
       <id>ggomarighetti</id>
-      <name>Guillermo Gomarighetti</name>
+      <name>Guillermo Orue Marighetti</name>
       <url>https://github.com/ggomarighetti</url>
       <roles>
         <role>owner</role>

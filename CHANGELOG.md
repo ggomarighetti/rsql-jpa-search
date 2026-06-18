@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. Releases follow
 Semantic Versioning and release notes are maintained from Conventional Commits.
 
+## [1.0.1](https://github.com/ggomarighetti/jpa-rsql-search/releases/tag/v1.0.1) (2026-06-18)
+
+### Release Metadata
+
+- Correct the published developer name to Guillermo Orue Marighetti.
+- Publish release artifacts to GitHub Packages in addition to Maven Central.
+
 ## [1.0.0](https://github.com/ggomarighetti/jpa-rsql-search/releases/tag/v1.0.0) (2026-06-17)
 
 ### Features
