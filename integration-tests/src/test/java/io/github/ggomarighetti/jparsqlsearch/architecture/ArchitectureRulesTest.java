@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArchitectureRulesTest {
     private static final List<String> PRODUCT_MODULES = List.of(
@@ -55,18 +57,27 @@ class ArchitectureRulesTest {
                 "exclusive-allow",
                 perspective.path("constraints").path(0).path("relation").asText(),
                 "Sonar documents production packages; Maven and ArchUnit enforce the dependency DAG.");
+        Set<String> mappedLabels = new HashSet<>();
         perspective
                 .path("groups")
                 .forEach(group -> {
+                    String label = group.path("label").asText();
+                    assertTrue(mappedLabels.add(label), () -> "Sonar architecture labels must be unique: " + label);
+                    assertFalse(
+                            label.contains(".")
+                                    || label.contains(":")
+                                    || label.contains("/")
+                                    || label.contains("\\"),
+                            () -> "Sonar architecture labels must stay conceptual, not namespace-like: " + label);
                     assertEquals(
                             0,
                             group.path("groups").size(),
-                            () -> "Sonar architecture package groups must stay flat: " + group.path("label").asText());
+                            () -> "Sonar architecture package groups must stay flat: " + label);
                     assertEquals(
                             1,
                             group.path("patterns").size(),
                             () -> "Every Sonar architecture package group must declare exactly one pattern: "
-                                    + group.path("label").asText());
+                                    + label);
                     mappedPatterns.add(group.path("patterns").path(0).asText());
                 });
 

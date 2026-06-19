@@ -10,6 +10,7 @@ const modelPath = resolve(".sonar", "architecture-model.json");
 const perspectiveLabel = "V2 Maven package leaves";
 const perspectiveDescription =
   "Direct modular boundaries for jpa-rsql-search v2 at production package granularity.";
+const basePackage = "io.github.ggomarighetti.jparsqlsearch";
 const allowAllPerspectiveConstraint = {
   from: ["**"],
   to: ["**"],
@@ -133,7 +134,7 @@ async function buildExpectedModel() {
     }
     for (const packageName of [...packageNames].sort()) {
       perspective.groups.push({
-        label: `${moduleName}:${packageName}`,
+        label: architectureLabel(moduleName, packageName),
         patterns: [
           `${moduleName}/src/main/java/${packageName.replaceAll(".", "/")}/*.java`,
         ],
@@ -155,4 +156,11 @@ async function collectJavaFiles(directory) {
     }),
   );
   return files.flat().sort();
+}
+
+function architectureLabel(moduleName, packageName) {
+  const relativePackage = packageName.startsWith(`${basePackage}.`)
+    ? packageName.slice(basePackage.length + 1)
+    : packageName;
+  return `${moduleName}-${relativePackage.replaceAll(".", "-")}`;
 }
