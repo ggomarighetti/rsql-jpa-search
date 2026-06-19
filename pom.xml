@@ -266,7 +266,7 @@
     <profile>
       <id>publication</id>
       <properties>
-        <altDeploymentRepository>local::file:${maven.multiModuleProjectDirectory}/target/staging-deploy</altDeploymentRepository>
+        <altDeploymentRepository>staging::file:${maven.multiModuleProjectDirectory}/target/staging-deploy</altDeploymentRepository>
       </properties>
       <build>
         <plugins>
