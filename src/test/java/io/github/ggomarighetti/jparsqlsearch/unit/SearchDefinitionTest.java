@@ -57,6 +57,28 @@ class SearchDefinitionTest {
     }
 
     @Test
+    void rejectsMalformedFieldFilteringAndSortingPaths() {
+        thrownBy(IllegalArgumentException.class, () ->
+                SearchDefinition.builder().entity(TestTypes.Product.class)
+                        .fields(fields -> fields.add("email", String.class)
+                                .path("email.")
+                                .filterable(filter -> filter.allow(EQUAL)))
+                        .build());
+        thrownBy(IllegalArgumentException.class, () ->
+                SearchDefinition.builder().entity(TestTypes.Product.class)
+                        .fields(fields -> fields.add("email", String.class)
+                                .filterable(filter -> filter
+                                        .path(".email")
+                                        .allow(EQUAL)))
+                        .build());
+        thrownBy(IllegalArgumentException.class, () ->
+                SearchDefinition.builder().entity(TestTypes.Product.class)
+                        .fields(fields -> fields.add("email", String.class)
+                                .sortable(sort -> sort.path("email.")))
+                        .build());
+    }
+
+    @Test
     void validatesFieldPathAgainstDeclaredEntitySubtype() {
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
                 .fields(fields -> fields.add("expiresAt", java.time.Instant.class)

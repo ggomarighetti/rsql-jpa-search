@@ -21,6 +21,7 @@ import java.lang.reflect.WildcardType;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ClassUtils;
@@ -108,8 +109,18 @@ public final class SearchPath {
                 resolved.toManyPaths());
     }
 
+    /**
+     * Splits a dot-separated path while preserving empty leading, middle, and trailing segments.
+     *
+     * @param path dot-separated Java/JPA path
+     * @return path segments including malformed empty segments
+     */
+    public static String[] segments(String path) {
+        return Objects.requireNonNull(path, "path must not be null").split("\\.", -1);
+    }
+
     private static ResolvedPath resolve(Class<?> entity, String selector, String path, SearchPolicy.Paths limits) {
-        String[] segments = path.split("\\.");
+        String[] segments = segments(path);
         validateDepth(selector, path, limits, segments.length);
         Class<?> current = entity;
         boolean traversesCollection = false;

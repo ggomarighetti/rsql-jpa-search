@@ -121,7 +121,24 @@ class SearchPathTest {
     void rejectsBlankMissingAndTooDeepSegments() {
         thrownBy(
                 IllegalArgumentException.class,
+                () -> SearchPath.metadata(TestTypes.Product.class, "name", ".name", String.class, DEEP_PATHS));
+        thrownBy(
+                IllegalArgumentException.class,
+                () -> SearchPath.metadata(TestTypes.Product.class, "name", "name.", String.class, DEEP_PATHS));
+        thrownBy(
+                IllegalArgumentException.class,
+                () -> SearchPath.metadata(TestTypes.Product.class, "name", ".", String.class, DEEP_PATHS));
+        thrownBy(
+                IllegalArgumentException.class,
                 () -> SearchPath.metadata(TestTypes.Product.class, "name", "customer..name", String.class, DEEP_PATHS));
+        thrownBy(
+                IllegalArgumentException.class,
+                () -> SearchPath.metadata(
+                        TestTypes.Product.class,
+                        "name",
+                        "customer.name.",
+                        String.class,
+                        DEEP_PATHS));
         thrownBy(
                 IllegalArgumentException.class,
                 () -> SearchPath.metadata(TestTypes.Product.class, "missing", "missing", String.class, DEEP_PATHS));
