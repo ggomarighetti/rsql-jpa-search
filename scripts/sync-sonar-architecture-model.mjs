@@ -117,9 +117,21 @@ function validateModel(candidate) {
   }
   const groupLabels = new Set(perspective.groups.map((group) => group.label));
   for (const constraint of perspective.constraints ?? []) {
-    if (!groupLabels.has(constraint.from) || !groupLabels.has(constraint.to)) {
+    if (constraint.relation !== "exclusive-allow") {
       throw new Error(
-        `Unknown architecture constraint: ${constraint.from} -> ${constraint.to}`,
+        `Architecture constraints must use exclusive-allow: ${JSON.stringify(constraint)}`,
+      );
+    }
+    const from = Array.isArray(constraint.from) ? constraint.from : [];
+    const to = Array.isArray(constraint.to) ? constraint.to : [];
+    if (
+      from.length === 0 ||
+      to.length !== 1 ||
+      from.some((label) => !groupLabels.has(label)) ||
+      !groupLabels.has(to[0])
+    ) {
+      throw new Error(
+        `Unknown architecture constraint: ${JSON.stringify(constraint)}`,
       );
     }
   }

@@ -45,56 +45,57 @@
       ],
       "constraints": [
         {
-          "from": "RSQL SPI",
-          "to": "API"
+          "relation": "exclusive-allow",
+          "from": [
+            "RSQL SPI",
+            "Core",
+            "JPA validation",
+            "Perplexhub",
+            "Spring Boot starter"
+          ],
+          "to": [
+            "API"
+          ]
         },
         {
-          "from": "Core",
-          "to": "API"
+          "relation": "exclusive-allow",
+          "from": [
+            "Core",
+            "Perplexhub",
+            "Spring Boot starter"
+          ],
+          "to": [
+            "RSQL SPI"
+          ]
         },
         {
-          "from": "Core",
-          "to": "RSQL SPI"
+          "relation": "exclusive-allow",
+          "from": [
+            "JPA validation",
+            "Perplexhub",
+            "Spring Boot starter"
+          ],
+          "to": [
+            "Core"
+          ]
         },
         {
-          "from": "JPA validation",
-          "to": "API"
+          "relation": "exclusive-allow",
+          "from": [
+            "Spring Boot starter"
+          ],
+          "to": [
+            "JPA validation"
+          ]
         },
         {
-          "from": "JPA validation",
-          "to": "Core"
-        },
-        {
-          "from": "Perplexhub",
-          "to": "API"
-        },
-        {
-          "from": "Perplexhub",
-          "to": "RSQL SPI"
-        },
-        {
-          "from": "Perplexhub",
-          "to": "Core"
-        },
-        {
-          "from": "Spring Boot starter",
-          "to": "API"
-        },
-        {
-          "from": "Spring Boot starter",
-          "to": "RSQL SPI"
-        },
-        {
-          "from": "Spring Boot starter",
-          "to": "Core"
-        },
-        {
-          "from": "Spring Boot starter",
-          "to": "JPA validation"
-        },
-        {
-          "from": "Spring Boot starter",
-          "to": "Perplexhub"
+          "relation": "exclusive-allow",
+          "from": [
+            "Spring Boot starter"
+          ],
+          "to": [
+            "Perplexhub"
+          ]
         }
       ]
     }
