@@ -313,11 +313,11 @@ class ProductSearchPostgresIT {
                     .operator(RsqlOperatorDescriptor.builder(CATEGORY_CODE)
                             .symbol("=categoryCode=")
                             .argumentType(CatalogCode.class)
-                            .jpaPredicate(context -> {
+                            .build(),
+                            context -> {
                                 CatalogCode code = (CatalogCode) context.argument(0);
                                 return context.criteriaBuilder().equal(context.path(), code.value());
-                            })
-                            .build());
+                            });
         }
     }
 

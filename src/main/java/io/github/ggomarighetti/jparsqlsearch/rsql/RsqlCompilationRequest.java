@@ -2,6 +2,7 @@ package io.github.ggomarighetti.jparsqlsearch.rsql;
 
 import io.github.ggomarighetti.jparsqlsearch.definition.SearchDefinition;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorRegistry;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorRegistry;
 import java.util.Objects;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.util.Assert;
@@ -16,6 +17,7 @@ import org.springframework.util.Assert;
  * @param distinct whether the query must eliminate duplicates
  * @param conversionService conversion service used during validation and execution
  * @param operators configured operator registry
+ * @param jpaOperators configured custom JPA bindings
  */
 public record RsqlCompilationRequest<T>(
         String rsql,
@@ -23,7 +25,8 @@ public record RsqlCompilationRequest<T>(
         SearchDefinition<T> definition,
         boolean distinct,
         ConversionService conversionService,
-        RsqlOperatorRegistry operators) {
+        RsqlOperatorRegistry operators,
+        RsqlJpaOperatorRegistry jpaOperators) {
     /** Validates required request components. */
     public RsqlCompilationRequest {
         Assert.hasText(rsql, "rsql must not be blank");
@@ -31,5 +34,6 @@ public record RsqlCompilationRequest<T>(
         Objects.requireNonNull(definition, "definition must not be null");
         Objects.requireNonNull(conversionService, "conversionService must not be null");
         Objects.requireNonNull(operators, "operators must not be null");
+        Objects.requireNonNull(jpaOperators, "jpaOperators must not be null");
     }
 }

@@ -1,7 +1,6 @@
 package io.github.ggomarighetti.jparsqlsearch.rsql.operator;
 
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlJpaPredicateFactory;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -9,29 +8,23 @@ import java.util.Optional;
 import java.util.Set;
 import org.springframework.util.Assert;
 
-/** Parser, conversion, arity, and optional JPA execution metadata for an operator. */
+/** Parser, conversion, and arity metadata for an operator. */
 public final class RsqlOperatorDescriptor {
     private final RsqlOperator operator;
     private final Set<String> symbols;
     private final RsqlOperatorArity arity;
     private final Class<?> argumentType;
-    private final RsqlJpaPredicateFactory jpaPredicateFactory;
-    private final boolean defaultJpaSupported;
 
     private RsqlOperatorDescriptor(
             RsqlOperator operator,
             Set<String> symbols,
             RsqlOperatorArity arity,
-            Class<?> argumentType,
-            RsqlJpaPredicateFactory jpaPredicateFactory,
-            boolean defaultJpaSupported) {
+            Class<?> argumentType) {
         this.operator = Objects.requireNonNull(operator, "operator must not be null");
         this.symbols = Collections.unmodifiableSet(new LinkedHashSet<>(
                 Objects.requireNonNull(symbols, "symbols must not be null")));
         this.arity = Objects.requireNonNull(arity, "arity must not be null");
         this.argumentType = argumentType;
-        this.jpaPredicateFactory = jpaPredicateFactory;
-        this.defaultJpaSupported = defaultJpaSupported;
     }
 
     /**
@@ -101,24 +94,6 @@ public final class RsqlOperatorDescriptor {
     }
 
     /**
-     * Returns custom JPA execution.
-     *
-     * @return custom JPA predicate factory when configured
-     */
-    public Optional<RsqlJpaPredicateFactory> jpaPredicateFactory() {
-        return Optional.ofNullable(jpaPredicateFactory);
-    }
-
-    /**
-     * Reports built-in backend support.
-     *
-     * @return whether the built-in backend natively implements this operator
-     */
-    public boolean defaultJpaSupported() {
-        return defaultJpaSupported;
-    }
-
-    /**
      * Creates the parser representation.
      *
      * @return parser-native operator using this descriptor's symbols and arity
@@ -133,8 +108,6 @@ public final class RsqlOperatorDescriptor {
         private final Set<String> symbols = new LinkedHashSet<>();
         private RsqlOperatorArity arity = RsqlOperatorArity.exact(1);
         private Class<?> argumentType;
-        private RsqlJpaPredicateFactory jpaPredicateFactory;
-        private boolean defaultJpaSupported;
 
         private Builder(RsqlOperator operator) {
             this.operator = Objects.requireNonNull(operator, "operator must not be null");
@@ -199,22 +172,6 @@ public final class RsqlOperatorDescriptor {
         }
 
         /**
-         * Configures custom JPA execution.
-         *
-         * @param jpaPredicateFactory predicate factory
-         * @return this builder
-         */
-        public Builder jpaPredicate(RsqlJpaPredicateFactory jpaPredicateFactory) {
-            this.jpaPredicateFactory = Objects.requireNonNull(jpaPredicateFactory, "jpaPredicateFactory must not be null");
-            return this;
-        }
-
-        Builder defaultJpaSupported(boolean defaultJpaSupported) {
-            this.defaultJpaSupported = defaultJpaSupported;
-            return this;
-        }
-
-        /**
          * Builds the descriptor.
          *
          * @return immutable descriptor
@@ -227,9 +184,7 @@ public final class RsqlOperatorDescriptor {
                     operator,
                     symbols,
                     arity,
-                    argumentType,
-                    jpaPredicateFactory,
-                    defaultJpaSupported);
+                    argumentType);
         }
     }
 }

@@ -60,6 +60,17 @@ class RsqlEngineCoverageTest {
     }
 
     @Test
+    void builderRejectsJpaBindingsForUnregisteredOperators() {
+        IllegalArgumentException exception = thrownBy(
+                IllegalArgumentException.class,
+                () -> PerplexhubRsqlEngines.builder()
+                        .jpaPredicate(CUSTOM, context -> null)
+                        .build());
+
+        assertTrue(exception.getMessage().contains("is not registered"));
+    }
+
+    @Test
     void parsedAstExposesNormalizedComparisonsForLogicalExpressions() {
         var ast = PerplexhubRsqlEngines.defaults().parse("email==a;name==b");
 
@@ -152,10 +163,9 @@ class RsqlEngineCoverageTest {
                 .build();
         RsqlOperatorDescriptor descriptor = RsqlOperatorDescriptor.builder(CUSTOM)
                 .symbol("=custom=")
-                .jpaPredicate(context -> null)
                 .build();
         SearchRsqlEngine engine = PerplexhubRsqlEngines.builder()
-                .operator(descriptor)
+                .operator(descriptor, context -> null)
                 .backend(new NoOpBackend())
                 .build();
         SearchDefinition<TestTypes.Product> definition = definition(CUSTOM, String.class);
@@ -169,6 +179,7 @@ class RsqlEngineCoverageTest {
                 () -> new PerplexhubRsqlBackendAdapter(options).validate(new RsqlBackendValidationContext(
                         definition,
                         engine.operators(),
+                        engine.jpaOperators(),
                         engine.conversionService())));
 
         assertEquals(SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH, exception.code());
@@ -179,10 +190,9 @@ class RsqlEngineCoverageTest {
         RsqlOperatorDescriptor descriptor = RsqlOperatorDescriptor.builder(CUSTOM)
                 .symbol("=custom=")
                 .argumentType(Token.class)
-                .jpaPredicate(context -> null)
                 .build();
         SearchRsqlEngine engine = PerplexhubRsqlEngines.builder()
-                .operator(descriptor)
+                .operator(descriptor, context -> null)
                 .backend(new NoOpBackend())
                 .build();
         SearchDefinition<TestTypes.Product> definition = definition(CUSTOM, Token.class);
@@ -192,6 +202,7 @@ class RsqlEngineCoverageTest {
                 () -> new PerplexhubRsqlBackendAdapter().validate(new RsqlBackendValidationContext(
                         definition,
                         engine.operators(),
+                        engine.jpaOperators(),
                         engine.conversionService())));
 
         assertEquals(SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH, exception.code());

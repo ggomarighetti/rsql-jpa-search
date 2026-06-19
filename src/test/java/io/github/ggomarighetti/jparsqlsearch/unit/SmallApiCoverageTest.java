@@ -8,6 +8,8 @@ import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperator;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorArity;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorDescriptor;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorRegistry;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorBinding;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorRegistry;
 import io.github.ggomarighetti.jparsqlsearch.sort.SearchSorting;
 import io.github.ggomarighetti.jparsqlsearch.validation.RuleViolation;
 import java.util.List;
@@ -207,22 +209,24 @@ class SmallApiCoverageTest {
                 .symbols("=custom=", "=c=")
                 .exactArguments(2)
                 .argumentType(String.class)
-                .jpaPredicate(context -> null)
                 .build();
         RsqlOperatorRegistry registry = new RsqlOperatorRegistry(List.of(descriptor));
+        RsqlJpaOperatorBinding binding = new RsqlJpaOperatorBinding(custom, context -> null);
+        RsqlJpaOperatorRegistry jpaRegistry = new RsqlJpaOperatorRegistry(List.of(binding));
 
         assertEquals(custom, descriptor.operator());
         assertEquals("=custom=", descriptor.symbol());
         assertEquals(Set.of("=custom=", "=c="), descriptor.symbols());
         assertEquals(String.class, descriptor.argumentType().orElseThrow());
-        assertTrue(descriptor.jpaPredicateFactory().isPresent());
-        assertFalse(descriptor.defaultJpaSupported());
+        assertTrue(jpaRegistry.predicate(custom).isPresent());
+        assertFalse(jpaRegistry.predicate(other).isPresent());
         assertEquals(descriptor, registry.require(custom));
         assertTrue(registry.descriptor(descriptor.comparisonOperator()).isPresent());
         assertTrue(registry.descriptor(other).isEmpty());
         thrownBy(IllegalArgumentException.class, () -> registry.require(other));
         thrownBy(IllegalArgumentException.class, () -> RsqlOperatorDescriptor.builder(custom).build());
         thrownBy(IllegalArgumentException.class, () -> new RsqlOperatorRegistry(List.of(descriptor, descriptor)));
+        thrownBy(IllegalArgumentException.class, () -> new RsqlJpaOperatorRegistry(List.of(binding, binding)));
         thrownBy(IllegalArgumentException.class, () -> new RsqlOperatorRegistry(List.of(
                 descriptor,
                 RsqlOperatorDescriptor.of(other, "=custom="))));

@@ -8,8 +8,11 @@ import io.github.ggomarighetti.jparsqlsearch.definition.SearchField;
 import io.github.ggomarighetti.jparsqlsearch.exception.SearchDefinitionValidationException;
 import io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendAdapter;
 import io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendValidationContext;
-import io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlJpaPredicateContext;
-import io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlJpaPredicateFactory;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorBinding;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorRegistry;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateContext;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateFactory;
+import io.github.ggomarighetti.jparsqlsearch.rsql.operator.DefaultRsqlOperatorDescriptors;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperator;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorDescriptor;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorRegistry;
@@ -63,17 +66,18 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
     public void validate(RsqlBackendValidationContext context) {
         for (RsqlOperator operator : context.definition().filteringOperators()) {
             RsqlOperatorDescriptor descriptor = context.operators().require(operator);
-            if (!descriptor.defaultJpaSupported() && descriptor.jpaPredicateFactory().isEmpty()) {
+            boolean custom = context.jpaOperators().predicate(operator).isPresent();
+            if (!DefaultRsqlOperatorDescriptors.isDefault(operator) && !custom) {
                 throw new SearchDefinitionValidationException(
                         SearchDefinitionValidationException.RSQL_OPERATOR_NOT_EXECUTABLE,
                         "operator '%s' is registered but has no Perplexhub JPA predicate".formatted(operator));
             }
-            if (descriptor.jpaPredicateFactory().isPresent() && descriptor.argumentType().isEmpty()) {
+            if (custom && descriptor.argumentType().isEmpty()) {
                 throw new SearchDefinitionValidationException(
                         SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH,
                         "custom operator '%s' must declare an argument type".formatted(operator));
             }
-            if (descriptor.jpaPredicateFactory().isPresent()
+            if (custom
                     && !Comparable.class.isAssignableFrom(descriptor.argumentType().orElseThrow())) {
                 throw new SearchDefinitionValidationException(
                         SearchDefinitionValidationException.RSQL_OPERATOR_TYPE_MISMATCH,
@@ -83,11 +87,14 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
         }
     }
 
-    private static List<RSQLCustomPredicate<?>> customPredicates(RsqlOperatorRegistry registry) {
+    private static List<RSQLCustomPredicate<?>> customPredicates(
+            RsqlOperatorRegistry operators,
+            RsqlJpaOperatorRegistry jpaOperators) {
         List<RSQLCustomPredicate<?>> predicates = new ArrayList<>();
-        for (RsqlOperatorDescriptor descriptor : registry.descriptors()) {
-            descriptor.jpaPredicateFactory().ifPresent(factory ->
-                    predicates.add(customPredicate(descriptor, factory)));
+        for (RsqlJpaOperatorBinding binding : jpaOperators.bindings()) {
+            predicates.add(customPredicate(
+                    operators.require(binding.operator()),
+                    binding.predicateFactory()));
         }
         return predicates;
     }
@@ -134,7 +141,7 @@ public final class PerplexhubRsqlBackendAdapter implements RsqlBackendAdapter {
             this.request = request;
             this.criteriaBuilder = criteriaBuilder;
             this.roots.put(request.definition().entity(), root);
-            this.customPredicates = customPredicates(request.operators());
+            this.customPredicates = customPredicates(request.operators(), request.jpaOperators());
         }
 
         private Predicate predicate(Node node) {

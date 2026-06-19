@@ -86,10 +86,10 @@ class JpaRsqlSearchRsqlAutoConfigurationTest {
                         .symbol("=startsWith=")
                         .arity(RsqlOperatorArity.exact(1))
                         .argumentType(String.class)
-                        .jpaPredicate(context -> context.criteriaBuilder().like(
-                                context.path().as(String.class),
-                                context.argument(0) + "%"))
-                        .build()))
+                        .build(),
+                context -> context.criteriaBuilder().like(
+                        context.path().as(String.class),
+                        context.argument(0) + "%")))
                 .run(context -> {
                     SearchCompiler compiler = context.getBean(SearchCompiler.class);
                     SearchDefinition<CatalogTextEntry> definition = SearchDefinition.builder().entity(CatalogTextEntry.class)

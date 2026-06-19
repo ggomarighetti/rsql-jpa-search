@@ -1,4 +1,4 @@
-package io.github.ggomarighetti.jparsqlsearch.rsql.backend;
+package io.github.ggomarighetti.jparsqlsearch.rsql.jpa;
 
 import jakarta.persistence.criteria.Predicate;
 

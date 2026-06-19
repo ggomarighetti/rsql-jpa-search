@@ -1,4 +1,4 @@
-package io.github.ggomarighetti.jparsqlsearch.rsql.backend;
+package io.github.ggomarighetti.jparsqlsearch.rsql.jpa;
 
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperator;
 import jakarta.persistence.criteria.CriteriaBuilder;

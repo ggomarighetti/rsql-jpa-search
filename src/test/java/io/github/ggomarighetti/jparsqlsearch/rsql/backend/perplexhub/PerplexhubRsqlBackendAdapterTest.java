@@ -109,7 +109,8 @@ class PerplexhubRsqlBackendAdapterTest {
                 definition,
                 distinct,
                 ApplicationConversionService.getSharedInstance(),
-                engine.operators());
+                engine.operators(),
+                engine.jpaOperators());
     }
 
     private static RsqlAst ast(Node node) throws Exception {

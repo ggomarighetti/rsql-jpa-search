@@ -70,7 +70,6 @@ public final class DefaultRsqlOperatorDescriptors {
         return RsqlOperatorDescriptor.builder(operator)
                 .symbols(symbols)
                 .arity(arity)
-                .defaultJpaSupported(true)
                 .build();
     }
 }

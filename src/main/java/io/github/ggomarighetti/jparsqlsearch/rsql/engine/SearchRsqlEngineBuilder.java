@@ -1,7 +1,11 @@
 package io.github.ggomarighetti.jparsqlsearch.rsql.engine;
 
 import io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendAdapter;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorBinding;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorRegistry;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateFactory;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.DefaultRsqlOperatorDescriptors;
+import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperator;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorDescriptor;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorRegistry;
 import io.github.ggomarighetti.jparsqlsearch.rsql.parser.DefaultRsqlParserFactory;
@@ -16,6 +20,7 @@ import org.springframework.core.convert.ConversionService;
 /** Builder for {@link SearchRsqlEngine}. */
 public final class SearchRsqlEngineBuilder {
     private final List<RsqlOperatorDescriptor> operators = new ArrayList<>();
+    private final List<RsqlJpaOperatorBinding> jpaOperators = new ArrayList<>();
     private RsqlParserFactory parserFactory = new DefaultRsqlParserFactory();
     private RsqlBackendAdapter backend;
     private ConversionService conversionService = ApplicationConversionService.getSharedInstance();
@@ -60,6 +65,34 @@ public final class SearchRsqlEngineBuilder {
     }
 
     /**
+     * Adds a descriptor and its custom JPA execution atomically.
+     *
+     * @param descriptor neutral operator descriptor
+     * @param predicateFactory custom JPA predicate
+     * @return this builder
+     */
+    public SearchRsqlEngineBuilder operator(
+            RsqlOperatorDescriptor descriptor,
+            RsqlJpaPredicateFactory predicateFactory) {
+        operator(descriptor);
+        return jpaPredicate(descriptor.operator(), predicateFactory);
+    }
+
+    /**
+     * Registers custom JPA execution for a logical operator.
+     *
+     * @param operator registered logical operator
+     * @param predicateFactory custom predicate factory
+     * @return this builder
+     */
+    public SearchRsqlEngineBuilder jpaPredicate(
+            RsqlOperator operator,
+            RsqlJpaPredicateFactory predicateFactory) {
+        jpaOperators.add(new RsqlJpaOperatorBinding(operator, predicateFactory));
+        return this;
+    }
+
+    /**
      * Replaces the parser factory.
      *
      * @param parserFactory parser factory
@@ -99,6 +132,13 @@ public final class SearchRsqlEngineBuilder {
      */
     public SearchRsqlEngine build() {
         RsqlOperatorRegistry registry = new RsqlOperatorRegistry(operators);
-        return new SearchRsqlEngine(registry, parserFactory, backend, conversionService);
+        RsqlJpaOperatorRegistry jpaRegistry = new RsqlJpaOperatorRegistry(jpaOperators);
+        for (RsqlJpaOperatorBinding binding : jpaRegistry.bindings()) {
+            if (registry.descriptor(binding.operator()).isEmpty()) {
+                throw new IllegalArgumentException(
+                        "JPA predicate operator '%s' is not registered".formatted(binding.operator()));
+            }
+        }
+        return new SearchRsqlEngine(registry, jpaRegistry, parserFactory, backend, conversionService);
     }
 }

@@ -216,8 +216,8 @@ class RsqlSearchGuardTest {
                         .operator(RsqlOperatorDescriptor.builder(customOperator)
                                 .symbol("=catalogCode=")
                                 .argumentType(CatalogCode.class)
-                                .jpaPredicate(context -> context.criteriaBuilder().conjunction())
-                                .build())
+                                .build(),
+                                context -> context.criteriaBuilder().conjunction())
                         .build(),
                 SearchPolicy.defaults());
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
@@ -243,8 +243,8 @@ class RsqlSearchGuardTest {
                         .operator(RsqlOperatorDescriptor.builder(customOperator)
                                 .symbol("=catalogCode=")
                                 .argumentType(CatalogCode.class)
-                                .jpaPredicate(context -> context.criteriaBuilder().conjunction())
-                                .build())
+                                .build(),
+                                context -> context.criteriaBuilder().conjunction())
                         .build(),
                 SearchPolicy.defaults());
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
@@ -268,8 +268,8 @@ class RsqlSearchGuardTest {
                         .operator(RsqlOperatorDescriptor.builder(customOperator)
                                 .symbol("=brokenCode=")
                                 .argumentType(CatalogCode.class)
-                                .jpaPredicate(context -> context.criteriaBuilder().conjunction())
-                                .build())
+                                .build(),
+                                context -> context.criteriaBuilder().conjunction())
                         .build(),
                 SearchPolicy.defaults());
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
@@ -450,7 +450,6 @@ class RsqlSearchGuardTest {
                 .symbol("=pair=")
                 .arity(RsqlOperatorArity.exact(2))
                 .argumentType(String.class)
-                .jpaPredicate(context -> context.criteriaBuilder().conjunction())
                 .build();
         SearchDefinition<TestTypes.Product> definition = SearchDefinition.builder().entity(TestTypes.Product.class)
                 .fields(fields -> fields.add("email", String.class)
@@ -723,7 +722,6 @@ class RsqlSearchGuardTest {
                 .symbol("=pair=")
                 .arity(RsqlOperatorArity.exact(2))
                 .argumentType(String.class)
-                .jpaPredicate(context -> context.criteriaBuilder().conjunction())
                 .build();
         SearchPolicy policy = SearchPolicy.builder()
                 .filter(filter -> filter.maxArgumentLength(5))

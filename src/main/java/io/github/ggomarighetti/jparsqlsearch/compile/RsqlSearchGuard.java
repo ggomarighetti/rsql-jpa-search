@@ -126,7 +126,8 @@ final class RsqlSearchGuard {
                     definition,
                     distinct,
                     engine.conversionService(),
-                    engine.operators())));
+                    engine.operators(),
+                    engine.jpaOperators())));
         } catch (RuntimeException exception) {
             throw new RsqlFilterValidationException(
                     RsqlFilterValidationException.RULES_FORBIDDEN,

@@ -11,6 +11,7 @@ import io.github.ggomarighetti.jparsqlsearch.rsql.RsqlAst;
 import io.github.ggomarighetti.jparsqlsearch.rsql.RsqlCompilationRequest;
 import io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendAdapter;
 import io.github.ggomarighetti.jparsqlsearch.rsql.backend.RsqlBackendValidationContext;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorRegistry;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperator;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorDescriptor;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperatorRegistry;
@@ -27,16 +28,19 @@ import org.springframework.data.jpa.domain.Specification;
  */
 public final class SearchRsqlEngine {
     private final RsqlOperatorRegistry operators;
+    private final RsqlJpaOperatorRegistry jpaOperators;
     private final RsqlParserFactory parserFactory;
     private final RsqlBackendAdapter backend;
     private final ConversionService conversionService;
 
     SearchRsqlEngine(
             RsqlOperatorRegistry operators,
+            RsqlJpaOperatorRegistry jpaOperators,
             RsqlParserFactory parserFactory,
             RsqlBackendAdapter backend,
             ConversionService conversionService) {
         this.operators = Objects.requireNonNull(operators, "operators must not be null");
+        this.jpaOperators = Objects.requireNonNull(jpaOperators, "jpaOperators must not be null");
         this.parserFactory = Objects.requireNonNull(parserFactory, "parserFactory must not be null");
         this.backend = Objects.requireNonNull(backend, "backend must not be null");
         this.conversionService = Objects.requireNonNull(conversionService, "conversionService must not be null");
@@ -58,6 +62,15 @@ public final class SearchRsqlEngine {
      */
     public ConversionService conversionService() {
         return conversionService;
+    }
+
+    /**
+     * Returns custom JPA operator bindings.
+     *
+     * @return immutable JPA operator registry
+     */
+    public RsqlJpaOperatorRegistry jpaOperators() {
+        return jpaOperators;
     }
 
     /**
@@ -104,7 +117,11 @@ public final class SearchRsqlEngine {
             }
             field.filtering().operators().keySet().forEach(operator -> validateOperator(field, operator));
         }
-        backend.validate(new RsqlBackendValidationContext(definition, operators, conversionService));
+        backend.validate(new RsqlBackendValidationContext(
+                definition,
+                operators,
+                jpaOperators,
+                conversionService));
     }
 
     private void validateOperator(SearchField<?> field, RsqlOperator operator) {
