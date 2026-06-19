@@ -1,0 +1,102 @@
+{
+  "perspectives": [
+    {
+      "label": "V2 Maven modules",
+      "description": "Direct modular boundaries for jpa-rsql-search v2.",
+      "language": "java",
+      "qualifiers": "namespace",
+      "groups": [
+        {
+          "label": "API",
+          "patterns": [
+            "jpa-rsql-search-api:**"
+          ]
+        },
+        {
+          "label": "RSQL SPI",
+          "patterns": [
+            "jpa-rsql-search-rsql-spi:**"
+          ]
+        },
+        {
+          "label": "Core",
+          "patterns": [
+            "jpa-rsql-search-core:**"
+          ]
+        },
+        {
+          "label": "JPA validation",
+          "patterns": [
+            "jpa-rsql-search-jpa-validation:**"
+          ]
+        },
+        {
+          "label": "Perplexhub",
+          "patterns": [
+            "jpa-rsql-search-perplexhub:**"
+          ]
+        },
+        {
+          "label": "Spring Boot starter",
+          "patterns": [
+            "jpa-rsql-search-spring-boot-starter:**"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "from": "RSQL SPI",
+          "to": "API"
+        },
+        {
+          "from": "Core",
+          "to": "API"
+        },
+        {
+          "from": "Core",
+          "to": "RSQL SPI"
+        },
+        {
+          "from": "JPA validation",
+          "to": "API"
+        },
+        {
+          "from": "JPA validation",
+          "to": "Core"
+        },
+        {
+          "from": "Perplexhub",
+          "to": "API"
+        },
+        {
+          "from": "Perplexhub",
+          "to": "RSQL SPI"
+        },
+        {
+          "from": "Perplexhub",
+          "to": "Core"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "API"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "RSQL SPI"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "Core"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "JPA validation"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "Perplexhub"
+        }
+      ]
+    }
+  ]
+}

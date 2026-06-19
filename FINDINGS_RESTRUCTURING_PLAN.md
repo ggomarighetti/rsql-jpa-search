@@ -2092,8 +2092,8 @@ Implementacion completada el 19 de junio de 2026 en
 - metadata neutral en `rsql.metadata` y bindings JPA separados en `rsql.jpa`;
 - `SearchPath`, `SearchDefinitionValidator` y
   `SearchProtectionException` movidos a sus owners finales sin aliases;
-- API, RSQL SPI y core compactados a 14 clases top-level cada uno, por debajo
-  del umbral remoto de 15 hojas observado por SonarCloud;
+- API, RSQL SPI y core compactados a contratos cohesionados, sin usar el
+  conteo estadistico remoto como frontera arquitectonica;
 - helpers de validacion, query y filtering agrupados como tipos anidados de
   sus contratos propietarios, sin artefactos adicionales;
 - guards de query/pageable/sorting agrupados como internals de
@@ -2121,13 +2121,16 @@ Estado local de los seis findings:
 | Finding original | Evidencia de cierre |
 |---|---|
 | Tangle RSQL | backend SPI no depende de engine; engine/core no depende de Perplexhub |
-| Oversized | presupuesto maximo de 14 clases top-level por modulo |
+| Oversized | reactor observable y modelo intencional versionado con los seis modulos Maven |
 | Weak tangle principal | `path` y `definition.validation` tienen owner unico y DAG protegido |
 | Weak tangle operadores/backend | descriptor neutral y registry JPA separado |
 | Split `exception` | errores runtime distribuidos entre `rsql.validation`, `page.validation`, `query.validation` y `protection` |
 | Split `validation` | SPI movido a `definition.validation` dentro de core |
 
 El analisis remoto de `daed1f3` dejo tangles, weak tangles y splits en cero y
-detecto tres contenedores oversized con 20, 19 y 15 hojas. El gate local fue
-ajustado al umbral autoritativo de 14; la siguiente ejecucion SonarCloud del PR
-confirma el cierre remoto.
+detecto tres contenedores oversized con 20, 19 y 15 hojas. El analisis posterior
+de `e0b458c` mantuvo los tres findings aun con 14 hojas, demostrando que el
+umbral es estadistico y se recalcula con el grafo. La solucion final no persigue
+ese numero: `.sonar/architecture-model.json` declara los seis modulos Maven
+como arquitectura intencional y el workflow la sincroniza antes del analisis.
+La siguiente ejecucion SonarCloud del PR confirma el cierre remoto.

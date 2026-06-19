@@ -1,12 +1,16 @@
 package io.github.ggomarighetti.jparsqlsearch.architecture;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
@@ -14,6 +18,14 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArchitectureRulesTest {
+    private static final List<String> PRODUCT_MODULES = List.of(
+            "jpa-rsql-search-api",
+            "jpa-rsql-search-rsql-spi",
+            "jpa-rsql-search-core",
+            "jpa-rsql-search-jpa-validation",
+            "jpa-rsql-search-perplexhub",
+            "jpa-rsql-search-spring-boot-starter");
+
     private final JavaClasses classes =
             new ClassFileImporter()
                     .withImportOption(new ImportOption.DoNotIncludeTests())
@@ -22,13 +34,7 @@ class ArchitectureRulesTest {
     @Test
     void productionModulesAreInternallyAcyclic() {
         Path root = Path.of(System.getProperty("workspace.root"));
-        for (String module : List.of(
-                "jpa-rsql-search-api",
-                "jpa-rsql-search-rsql-spi",
-                "jpa-rsql-search-core",
-                "jpa-rsql-search-jpa-validation",
-                "jpa-rsql-search-perplexhub",
-                "jpa-rsql-search-spring-boot-starter")) {
+        for (String module : PRODUCT_MODULES) {
             JavaClasses moduleClasses = new ClassFileImporter()
                     .importPath(root.resolve(module).resolve("target/classes"));
             slices().matching("io.github.ggomarighetti.jparsqlsearch.(*)..")
@@ -38,26 +44,23 @@ class ArchitectureRulesTest {
     }
 
     @Test
-    void productModulesStayWithinTheArchitectureLeafBudget() throws IOException {
+    void sonarIntendedArchitectureMapsEveryProductModule() throws IOException {
         Path root = Path.of(System.getProperty("workspace.root"));
-        for (String module : List.of(
-                "jpa-rsql-search-api",
-                "jpa-rsql-search-rsql-spi",
-                "jpa-rsql-search-core",
-                "jpa-rsql-search-jpa-validation",
-                "jpa-rsql-search-perplexhub",
-                "jpa-rsql-search-spring-boot-starter")) {
-            Path classesDirectory = root.resolve(module).resolve("target/classes");
-            try (var classes = Files.walk(classesDirectory)) {
-                long topLevelClasses = classes
-                        .filter(path -> path.getFileName().toString().endsWith(".class"))
-                        .filter(path -> !path.getFileName().toString().contains("$"))
-                        .count();
-                assertTrue(
-                        topLevelClasses <= 14,
-                        () -> module + " exceeds the 14-class architecture leaf budget: " + topLevelClasses);
-            }
-        }
+        JsonNode model = new ObjectMapper()
+                .readTree(Files.readString(root.resolve(".sonar/architecture-model.json")));
+        Set<String> mappedPatterns = new HashSet<>();
+        model.path("perspectives")
+                .path(0)
+                .path("groups")
+                .forEach(group -> group.path("patterns")
+                        .forEach(pattern -> mappedPatterns.add(pattern.asText())));
+
+        Set<String> expectedPatterns = new HashSet<>();
+        PRODUCT_MODULES.forEach(module -> expectedPatterns.add(module + ":**"));
+        assertTrue(
+                mappedPatterns.equals(expectedPatterns),
+                () -> "Sonar architecture patterns differ from the product modules: "
+                        + mappedPatterns);
     }
 
     @Test

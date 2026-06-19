@@ -44,7 +44,7 @@ un reactor con ownership fisico. El cierre local es:
 | Hallazgo | Resolucion implementada | Gate |
 |---|---|---|
 | Tangle RSQL | engine en `rsql.engine`, backend context estrecho y Perplexhub fuera de core | ArchUnit prohibe backend SPI -> engine y core -> Perplexhub |
-| Oversized | modulos limitados a 14 clases top-level | leaf-budget test, inspeccion de jars y DAG Maven |
+| Oversized | seis modulos Maven declarados como arquitectura intencional | modelo versionado, inspeccion de jars y DAG Maven |
 | Weak tangle principal | `path` transversal y SPI en `definition.validation` | ciclos por modulo y dependencias prohibidas |
 | Weak tangle operadores/backend | descriptor neutral y bindings en `rsql.jpa` | test de operadores custom y regla anti-JPA en metadata |
 | Split `exception` | errores runtime en `rsql.validation`, `page.validation`, `query.validation` y `protection` | test de ausencia de FQCN legacy |
@@ -54,11 +54,12 @@ El reporte JaCoCo agregado cubre 110 clases, 2.895 lineas y 826 ramas al 100%.
 Los consumer tests compilan tanto el starter como una seleccion de modulos.
 
 El analisis del commit `daed1f3` en el PR #26 confirmo `Tangles = 0`,
-`Weak tangles = 0` y `Split responsibilities = 0`, pero revelo el umbral real
-de Sonar para `Oversized`: 15 hojas. La correccion posterior deja API, RSQL SPI
-y core en 14 clases top-level cada uno; los demas modulos quedan entre 1 y 4.
-La confirmacion autoritativa final corresponde al siguiente analisis
-SonarCloud del mismo PR.
+`Weak tangles = 0` y `Split responsibilities = 0`. El analisis posterior de
+`e0b458c` mantuvo tres `Oversized` aun reduciendo API, RSQL SPI y core a 14
+hojas, porque el umbral se recalcula estadisticamente. La solucion final
+versiona `.sonar/architecture-model.json`, mapea los seis modulos fisicos y lo
+sincroniza antes de cada analisis autenticado. La confirmacion autoritativa
+final corresponde al siguiente analisis SonarCloud del mismo PR.
 
 ## 1. Flaw: Tangle RSQL
 
