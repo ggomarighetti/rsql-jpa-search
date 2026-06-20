@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArchitectureRulesTest {
     private static final List<String> PRODUCT_MODULES = List.of(
