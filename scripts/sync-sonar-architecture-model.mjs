@@ -100,58 +100,56 @@ function expectedArchitectureModel() {
   return {
     perspectives: [
       {
-        label: "v2-maven-reactor",
+        label: "V2 Maven modules",
         description: "Direct v2 module DAG for the publishable jpa-rsql-search reactor.",
+        language: "java",
+        qualifiers: "namespace",
         groups: [
           group(
-            "api",
-            "jpa-rsql-search-api/src/main/java/**",
+            "API",
+            "jpa-rsql-search-api:**",
           ),
           group(
-            "rsql-spi",
-            "jpa-rsql-search-rsql-spi/src/main/java/**",
+            "RSQL SPI",
+            "jpa-rsql-search-rsql-spi:**",
           ),
           group(
-            "core",
-            "jpa-rsql-search-core/src/main/java/**",
+            "Core",
+            "jpa-rsql-search-core:**",
           ),
           group(
-            "jpa-validation",
-            "jpa-rsql-search-jpa-validation/src/main/java/**",
+            "JPA validation",
+            "jpa-rsql-search-jpa-validation:**",
           ),
           group(
-            "perplexhub",
-            "jpa-rsql-search-perplexhub/src/main/java/**",
+            "Perplexhub",
+            "jpa-rsql-search-perplexhub:**",
           ),
           group(
-            "spring-boot-starter",
-            "jpa-rsql-search-spring-boot-starter/src/main/java/**",
+            "Spring Boot starter",
+            "jpa-rsql-search-spring-boot-starter:**",
           ),
         ],
         constraints: [
           exclusiveAllow(
-            ["rsql-spi", "core", "jpa-validation", "perplexhub", "spring-boot-starter"],
-            ["api"],
+            ["RSQL SPI", "Core", "JPA validation", "Perplexhub", "Spring Boot starter"],
+            ["API"],
           ),
           exclusiveAllow(
-            ["core", "perplexhub", "spring-boot-starter"],
-            ["rsql-spi"],
+            ["Core", "Perplexhub", "Spring Boot starter"],
+            ["RSQL SPI"],
           ),
           exclusiveAllow(
-            ["jpa-validation", "perplexhub", "spring-boot-starter"],
-            ["core"],
+            ["JPA validation", "Perplexhub", "Spring Boot starter"],
+            ["Core"],
           ),
           exclusiveAllow(
-            ["spring-boot-starter"],
-            ["jpa-validation"],
+            ["Spring Boot starter"],
+            ["JPA validation"],
           ),
           exclusiveAllow(
-            ["spring-boot-starter"],
-            ["perplexhub"],
-          ),
-          deny(
-            ["api", "rsql-spi", "core", "jpa-validation", "perplexhub"],
-            ["spring-boot-starter"],
+            ["Spring Boot starter"],
+            ["Perplexhub"],
           ),
         ],
       },
@@ -168,16 +166,8 @@ function group(label, pattern) {
 
 function exclusiveAllow(from, to) {
   return {
-    from,
-    to,
     relation: "exclusive-allow",
-  };
-}
-
-function deny(from, to) {
-  return {
     from,
     to,
-    relation: "deny",
   };
 }
