@@ -2,98 +2,99 @@
   "perspectives": [
     {
       "label": "V2 Maven modules",
-      "description": "Direct v2 module DAG for the publishable jpa-rsql-search reactor.",
+      "description": "Direct modular boundaries for the publishable jpa-rsql-search v2 reactor.",
+      "language": "java",
+      "qualifiers": "namespace",
       "groups": [
         {
           "label": "API",
           "patterns": [
-            "jpa-rsql-search-api/src/main/java/**"
+            "jpa-rsql-search-api:**"
           ]
         },
         {
           "label": "RSQL SPI",
           "patterns": [
-            "jpa-rsql-search-rsql-spi/src/main/java/**"
+            "jpa-rsql-search-rsql-spi:**"
           ]
         },
         {
           "label": "Core",
           "patterns": [
-            "jpa-rsql-search-core/src/main/java/**"
+            "jpa-rsql-search-core:**"
           ]
         },
         {
           "label": "JPA validation",
           "patterns": [
-            "jpa-rsql-search-jpa-validation/src/main/java/**"
+            "jpa-rsql-search-jpa-validation:**"
           ]
         },
         {
           "label": "Perplexhub",
           "patterns": [
-            "jpa-rsql-search-perplexhub/src/main/java/**"
+            "jpa-rsql-search-perplexhub:**"
           ]
         },
         {
           "label": "Spring Boot starter",
           "patterns": [
-            "jpa-rsql-search-spring-boot-starter/src/main/java/**"
+            "jpa-rsql-search-spring-boot-starter:**"
           ]
         }
       ],
       "constraints": [
         {
-          "relation": "exclusive-allow",
-          "from": [
-            "RSQL SPI",
-            "Core",
-            "JPA validation",
-            "Perplexhub",
-            "Spring Boot starter"
-          ],
-          "to": [
-            "API"
-          ]
+          "from": "RSQL SPI",
+          "to": "API"
         },
         {
-          "relation": "exclusive-allow",
-          "from": [
-            "Core",
-            "Perplexhub",
-            "Spring Boot starter"
-          ],
-          "to": [
-            "RSQL SPI"
-          ]
+          "from": "Core",
+          "to": "API"
         },
         {
-          "relation": "exclusive-allow",
-          "from": [
-            "JPA validation",
-            "Perplexhub",
-            "Spring Boot starter"
-          ],
-          "to": [
-            "Core"
-          ]
+          "from": "Core",
+          "to": "RSQL SPI"
         },
         {
-          "relation": "exclusive-allow",
-          "from": [
-            "Spring Boot starter"
-          ],
-          "to": [
-            "JPA validation"
-          ]
+          "from": "JPA validation",
+          "to": "API"
         },
         {
-          "relation": "exclusive-allow",
-          "from": [
-            "Spring Boot starter"
-          ],
-          "to": [
-            "Perplexhub"
-          ]
+          "from": "JPA validation",
+          "to": "Core"
+        },
+        {
+          "from": "Perplexhub",
+          "to": "API"
+        },
+        {
+          "from": "Perplexhub",
+          "to": "RSQL SPI"
+        },
+        {
+          "from": "Perplexhub",
+          "to": "Core"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "API"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "RSQL SPI"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "Core"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "JPA validation"
+        },
+        {
+          "from": "Spring Boot starter",
+          "to": "Perplexhub"
         }
       ]
     }

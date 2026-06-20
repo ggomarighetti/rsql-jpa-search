@@ -8,6 +8,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.List;
@@ -56,12 +57,14 @@ class ArchitectureRulesTest {
                 perspective.path("label").asText(),
                 "Sonar should display the publishable v2 Maven reactor as the intended architecture.");
         Map<String, String> expectedGroups = new LinkedHashMap<>();
-        expectedGroups.put("API", "jpa-rsql-search-api/src/main/java/**");
-        expectedGroups.put("RSQL SPI", "jpa-rsql-search-rsql-spi/src/main/java/**");
-        expectedGroups.put("Core", "jpa-rsql-search-core/src/main/java/**");
-        expectedGroups.put("JPA validation", "jpa-rsql-search-jpa-validation/src/main/java/**");
-        expectedGroups.put("Perplexhub", "jpa-rsql-search-perplexhub/src/main/java/**");
-        expectedGroups.put("Spring Boot starter", "jpa-rsql-search-spring-boot-starter/src/main/java/**");
+        assertEquals("java", perspective.path("language").asText());
+        assertEquals("namespace", perspective.path("qualifiers").asText());
+        expectedGroups.put("API", "jpa-rsql-search-api:**");
+        expectedGroups.put("RSQL SPI", "jpa-rsql-search-rsql-spi:**");
+        expectedGroups.put("Core", "jpa-rsql-search-core:**");
+        expectedGroups.put("JPA validation", "jpa-rsql-search-jpa-validation:**");
+        expectedGroups.put("Perplexhub", "jpa-rsql-search-perplexhub:**");
+        expectedGroups.put("Spring Boot starter", "jpa-rsql-search-spring-boot-starter:**");
         Map<String, String> actualGroups = new LinkedHashMap<>();
         perspective
                 .path("groups")
@@ -75,10 +78,29 @@ class ArchitectureRulesTest {
                     actualGroups.put(label, group.path("patterns").path(0).asText());
                 });
         assertEquals(expectedGroups, actualGroups);
-        assertEquals(5, perspective.path("constraints").size(), "The intended architecture must encode the v2 DAG.");
-        perspective.path("constraints").forEach(constraint -> assertTrue(
-                Set.of("exclusive-allow").contains(constraint.path("relation").asText()),
-                () -> "Unexpected Sonar architecture relation: " + constraint));
+        Set<String> expectedConstraints = Set.of(
+                "RSQL SPI -> API",
+                "Core -> API",
+                "Core -> RSQL SPI",
+                "JPA validation -> API",
+                "JPA validation -> Core",
+                "Perplexhub -> API",
+                "Perplexhub -> RSQL SPI",
+                "Perplexhub -> Core",
+                "Spring Boot starter -> API",
+                "Spring Boot starter -> RSQL SPI",
+                "Spring Boot starter -> Core",
+                "Spring Boot starter -> JPA validation",
+                "Spring Boot starter -> Perplexhub");
+        Set<String> actualConstraints = new LinkedHashSet<>();
+        perspective.path("constraints").forEach(constraint -> {
+            assertTrue(constraint.path("from").isTextual());
+            assertTrue(constraint.path("to").isTextual());
+            assertTrue(constraint.path("relation").isMissingNode());
+            actualConstraints.add(
+                    constraint.path("from").asText() + " -> " + constraint.path("to").asText());
+        });
+        assertEquals(expectedConstraints, actualConstraints, "The intended architecture must encode the v2 DAG.");
         assertEquals(0, model.path("constraints").size(), "The SonarCloud intended architecture API expects perspective-scoped constraints.");
     }
 
