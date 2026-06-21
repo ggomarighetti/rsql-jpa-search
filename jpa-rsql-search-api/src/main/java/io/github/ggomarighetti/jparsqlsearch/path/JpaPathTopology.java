@@ -12,7 +12,7 @@ final class JpaPathTopology {
     private JpaPathTopology() {
     }
 
-    static void record(
+    static void register(
             String resolvedPath,
             ResolvedSegment resolved,
             Class<?> resolvedType,

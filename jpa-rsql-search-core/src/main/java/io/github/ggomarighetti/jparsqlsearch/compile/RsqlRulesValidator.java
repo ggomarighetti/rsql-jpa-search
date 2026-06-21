@@ -193,10 +193,6 @@ final class RsqlRulesValidator {
         return orAnalyzer.metadata(root);
     }
 
-    private static String rootPath(String path) {
-        return RsqlOrAnalyzer.rootPath(path);
-    }
-
     private RsqlFilterValidationException limitExceeded() {
         return new RsqlFilterValidationException(
                 RsqlFilterValidationException.LIMIT_EXCEEDED,

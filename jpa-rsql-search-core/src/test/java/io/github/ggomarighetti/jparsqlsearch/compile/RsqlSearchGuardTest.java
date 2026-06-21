@@ -647,20 +647,18 @@ class RsqlSearchGuardTest {
     }
 
     @Test
-    void privateRsqlHelpersHandleUnsupportedNodesAndRootPaths() throws ReflectiveOperationException {
+    void rsqlHelpersHandleUnsupportedNodesAndRootPaths() throws ReflectiveOperationException {
         Method requiresDistinct = RsqlSearchGuard.class.getDeclaredMethod(
                 "requiresDistinct",
                 Node.class,
                 SearchDefinition.class);
         requiresDistinct.setAccessible(true);
-        Method rootPath = RsqlRulesValidator.class.getDeclaredMethod("rootPath", String.class);
-        rootPath.setAccessible(true);
         Method orMetadata = RsqlRulesValidator.class.getDeclaredMethod("orMetadata", OrNode.class);
         orMetadata.setAccessible(true);
 
         assertEquals(false, requiresDistinct.invoke(null, new UnsupportedNode(), filters()));
-        assertEquals("category", rootPath.invoke(null, "category"));
-        assertEquals("category", rootPath.invoke(null, "category.code"));
+        assertEquals("category", RsqlOrAnalyzer.rootPath("category"));
+        assertEquals("category", RsqlOrAnalyzer.rootPath("category.code"));
         assertNotNull(orMetadata.invoke(
                 validator(filters(), TestRsqlEngines.defaults().operators()),
                 new OrNode(List.of(new UnsupportedNode()))));

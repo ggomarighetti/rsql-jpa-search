@@ -25,7 +25,7 @@ final class PathResolver {
             Class<?> resolvedType = resolved.type();
             collectionValued = isCollectionValued(resolvedType);
             appendPrefix(resolvedPrefix, segment);
-            JpaPathTopology.record(
+            JpaPathTopology.register(
                     resolvedPrefix.toString(),
                     resolved,
                     resolvedType,
