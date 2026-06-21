@@ -5,7 +5,7 @@ import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperators;
 import java.util.List;
 import java.util.Set;
 
-/** Built-in RSQL operator descriptors understood by the default backend. */
+/** Built-in RSQL operator descriptors understood by the default engine configuration. */
 public final class DefaultRsqlOperatorDescriptors {
     private static final Set<RsqlOperator> DEFAULT_OPERATORS = Set.of(
             RsqlOperators.EQUAL,

@@ -4,6 +4,7 @@ import io.github.ggomarighetti.jparsqlsearch.filter.FilterValidationResult;
 import io.github.ggomarighetti.jparsqlsearch.page.SearchPaging;
 import io.github.ggomarighetti.jparsqlsearch.query.SearchQuery;
 import io.github.ggomarighetti.jparsqlsearch.rsql.operator.RsqlOperator;
+import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaPredicateContext;
 import io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorArity;
 import io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorDescriptor;
 import io.github.ggomarighetti.jparsqlsearch.rsql.metadata.RsqlOperatorRegistry;
@@ -11,6 +12,12 @@ import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorBinding;
 import io.github.ggomarighetti.jparsqlsearch.rsql.jpa.RsqlJpaOperatorRegistry;
 import io.github.ggomarighetti.jparsqlsearch.sort.SearchSorting;
 import io.github.ggomarighetti.jparsqlsearch.validation.RuleViolation;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.metamodel.Attribute;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.hibernate.validator.cfg.defs.MinDef;
@@ -211,5 +218,42 @@ class SmallApiCoverageTest {
         thrownBy(IllegalArgumentException.class, () -> new RsqlOperatorRegistry(List.of(
                 descriptor,
                 RsqlOperatorDescriptor.of(other, "=custom="))));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void rsqlJpaPredicateContextRequiresAttributeAndCopiesArguments() {
+        CriteriaBuilder criteriaBuilder = proxy(CriteriaBuilder.class);
+        Path<Object> path = proxy(Path.class);
+        Attribute<Object, Object> attribute = proxy(Attribute.class);
+        From<Object, Object> root = proxy(From.class);
+        List<Object> arguments = new ArrayList<>(List.of("active"));
+
+        RsqlJpaPredicateContext<Object, Object, Object, Object, Object> context =
+                new RsqlJpaPredicateContext<>(criteriaBuilder, path, attribute, arguments, root, EQUAL);
+
+        arguments.clear();
+
+        assertSame(attribute, context.attribute());
+        assertEquals("active", context.argument(0));
+        assertEquals(List.of("active"), context.arguments());
+        thrownBy(NullPointerException.class, () ->
+                new RsqlJpaPredicateContext<>(criteriaBuilder, path, null, List.of("active"), root, EQUAL));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T proxy(Class<T> type) {
+        return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, (instance, method, args) -> {
+            if ("equals".equals(method.getName())) {
+                return instance == args[0];
+            }
+            if ("hashCode".equals(method.getName())) {
+                return System.identityHashCode(instance);
+            }
+            if ("toString".equals(method.getName())) {
+                return type.getSimpleName() + "Proxy";
+            }
+            return null;
+        });
     }
 }

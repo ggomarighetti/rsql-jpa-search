@@ -34,6 +34,7 @@ public record RsqlJpaPredicateContext<P, A, B, R, J>(
     public RsqlJpaPredicateContext {
         Objects.requireNonNull(criteriaBuilder, "criteriaBuilder must not be null");
         Objects.requireNonNull(path, "path must not be null");
+        Objects.requireNonNull(attribute, "attribute must not be null");
         arguments = List.copyOf(Objects.requireNonNull(arguments, "arguments must not be null"));
         Objects.requireNonNull(root, "root must not be null");
         Objects.requireNonNull(operator, "operator must not be null");
