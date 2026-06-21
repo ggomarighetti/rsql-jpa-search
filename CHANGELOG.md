@@ -3,6 +3,25 @@
 All notable changes to this project are documented here. Releases follow
 Semantic Versioning and release notes are maintained from Conventional Commits.
 
+## [2.0.0](https://github.com/ggomarighetti/jpa-rsql-search/compare/v1.0.1...v2.0.0) (2026-06-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* introduce the modular v2 architecture ([#26](https://github.com/ggomarighetti/jpa-rsql-search/issues/26))
+
+### Features
+
+* harden search validation and rsql extensibility ([#24](https://github.com/ggomarighetti/jpa-rsql-search/issues/24)) ([e7c236a](https://github.com/ggomarighetti/jpa-rsql-search/commit/e7c236ac22592e7cce145fae6b8e7fb8c9829b22))
+* introduce the modular v2 architecture ([#26](https://github.com/ggomarighetti/jpa-rsql-search/issues/26)) ([207bd2e](https://github.com/ggomarighetti/jpa-rsql-search/commit/207bd2e2307aba2b1d70f67169017f4bf888c97e))
+* **security:** adopt OpenSSF supply-chain controls ([#27](https://github.com/ggomarighetti/jpa-rsql-search/issues/27)) ([94a2413](https://github.com/ggomarighetti/jpa-rsql-search/commit/94a2413c4aabc38c8430a587fce29b26c4321cb5))
+
+
+### Bug Fixes
+
+* **security:** keep OSV scanning compatible with SHA enforcement ([4839007](https://github.com/ggomarighetti/jpa-rsql-search/commit/4839007df248e5d4ea1a9f0c38adbf4f53330f96))
+* **security:** pin ClusterFuzzLite base image ([#29](https://github.com/ggomarighetti/jpa-rsql-search/issues/29)) ([3d53587](https://github.com/ggomarighetti/jpa-rsql-search/commit/3d535870d3ba83f2705b1d39f3643670be04ca5b))
+
 ## [1.0.1](https://github.com/ggomarighetti/jpa-rsql-search/releases/tag/v1.0.1) (2026-06-18)
 
 ### Release Metadata
