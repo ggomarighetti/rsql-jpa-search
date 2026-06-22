@@ -7,7 +7,7 @@ on:
     paths:
       - pom.xml
       - jpa-rsql-search-*/pom.xml
-      - integration-tests/pom.xml
+      - integration/pom.xml
       - CHANGELOG.md
       - .github/release/jreleaser.yml
       - .github/release/release-please-config.json

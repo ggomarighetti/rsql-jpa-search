@@ -861,7 +861,7 @@ Generate JaCoCo coverage for unit and integration tests:
 ```
 
 The aggregate XML report is written to
-`integration-tests/target/site/jacoco-aggregate/jacoco.xml`. CI uploads JaCoCo
+`integration/target/site/jacoco-aggregate/jacoco.xml`. CI uploads JaCoCo
 and JUnit results to Codecov, and runs SonarQube Cloud analysis when the
 repository has a `SONAR_TOKEN` secret configured.
 
