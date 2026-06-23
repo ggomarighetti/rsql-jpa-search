@@ -16,12 +16,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class JarBoundaryIT {
     private static final List<ProductModule> PRODUCT_MODULES = List.of(
-            new ProductModule("api", "jpa-rsql-search-api"),
-            new ProductModule("rsql-spi", "jpa-rsql-search-rsql-spi"),
-            new ProductModule("core", "jpa-rsql-search-core"),
-            new ProductModule("jpa-validation", "jpa-rsql-search-jpa-validation"),
-            new ProductModule("perplexhub", "jpa-rsql-search-perplexhub"),
-            new ProductModule("spring-boot-starter", "jpa-rsql-search-spring-boot-starter"));
+            new ProductModule("api", "rsql-jpa-search-api"),
+            new ProductModule("rsql-spi", "rsql-jpa-search-rsql-spi"),
+            new ProductModule("core", "rsql-jpa-search-core"),
+            new ProductModule("jpa-validation", "rsql-jpa-search-jpa-validation"),
+            new ProductModule("perplexhub", "rsql-jpa-search-perplexhub"),
+            new ProductModule("spring-boot-starter", "rsql-jpa-search-spring-boot-starter"));
 
     @Test
     void productJarsHaveUniqueClassesAndPackages() throws IOException {
@@ -52,8 +52,24 @@ class JarBoundaryIT {
             }
         }
 
-        Path retiredCoordinate = root.resolve("target/staging-deploy/io/github/ggomarighetti/jpa-rsql-search");
-        assertFalse(Files.exists(retiredCoordinate), "the retired jpa-rsql-search coordinate must not be generated");
+        Path group = root.resolve("target/staging-deploy/io/github/ggomarighetti");
+        List<String> unpublishedArtifacts = List.of(
+                "jpa-rsql-search",
+                "jpa-rsql-search-parent",
+                "jpa-rsql-search-api",
+                "jpa-rsql-search-rsql-spi",
+                "jpa-rsql-search-core",
+                "jpa-rsql-search-jpa-validation",
+                "jpa-rsql-search-perplexhub",
+                "jpa-rsql-search-spring-boot-starter",
+                "jpa-rsql-search-integration-tests",
+                "rsql-jpa-search",
+                "rsql-jpa-search-integration-tests");
+        for (String artifact : unpublishedArtifacts) {
+            assertFalse(
+                    Files.exists(group.resolve(artifact)),
+                    () -> "unpublished coordinate must not be generated: " + artifact);
+        }
     }
 
     @Test

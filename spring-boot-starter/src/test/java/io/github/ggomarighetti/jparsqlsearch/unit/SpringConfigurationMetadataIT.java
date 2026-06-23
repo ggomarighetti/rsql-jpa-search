@@ -51,7 +51,7 @@ class SpringConfigurationMetadataIT {
         try (Stream<Path> files = Files.list(Path.of("target"))) {
             return files.filter(path -> {
                         String name = path.getFileName().toString();
-                        return name.startsWith("jpa-rsql-search-spring-boot-starter-")
+                        return name.startsWith("rsql-jpa-search-spring-boot-starter-")
                                 && name.endsWith(".jar")
                                 && !name.endsWith("-sources.jar")
                                 && !name.endsWith("-javadoc.jar")
