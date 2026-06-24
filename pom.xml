@@ -79,6 +79,12 @@
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/integration/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <sonar.junit.reportPaths>**/target/surefire-reports,**/target/failsafe-reports</sonar.junit.reportPaths>
+    <!-- ClusterFuzzLite builder images intentionally copy the checked-out repo and use the OSS-Fuzz builder model. -->
+    <sonar.issue.ignore.multicriteria>clusterFuzzLiteRoot,clusterFuzzLiteCopy</sonar.issue.ignore.multicriteria>
+    <sonar.issue.ignore.multicriteria.clusterFuzzLiteRoot.ruleKey>docker:S6471</sonar.issue.ignore.multicriteria.clusterFuzzLiteRoot.ruleKey>
+    <sonar.issue.ignore.multicriteria.clusterFuzzLiteRoot.resourceKey>.github/clusterfuzzlite/Dockerfile</sonar.issue.ignore.multicriteria.clusterFuzzLiteRoot.resourceKey>
+    <sonar.issue.ignore.multicriteria.clusterFuzzLiteCopy.ruleKey>docker:S6470</sonar.issue.ignore.multicriteria.clusterFuzzLiteCopy.ruleKey>
+    <sonar.issue.ignore.multicriteria.clusterFuzzLiteCopy.resourceKey>.github/clusterfuzzlite/Dockerfile</sonar.issue.ignore.multicriteria.clusterFuzzLiteCopy.resourceKey>
   </properties>
 
   <dependencyManagement>
