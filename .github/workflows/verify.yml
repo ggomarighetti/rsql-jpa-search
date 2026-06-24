@@ -88,6 +88,10 @@ jobs:
             integration/target/failsafe-reports/
           if-no-files-found: ignore
 
+      - name: Summarize coverage
+        if: ${{ always() }}
+        run: python3 .github/scripts/summarize-jacoco.py
+
       - name: Skip Codecov uploads
         if: ${{ env.CODECOV_TOKEN == '' }}
         run: echo "CODECOV_TOKEN secret is not configured; skipping Codecov uploads."
@@ -97,7 +101,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
           token: ${{ env.CODECOV_TOKEN }}
-          files: integration/target/site/jacoco-aggregate/jacoco.xml
+          files: api/target/site/jacoco/jacoco.xml,rsql-spi/target/site/jacoco/jacoco.xml,core/target/site/jacoco/jacoco.xml,jpa-validation/target/site/jacoco/jacoco.xml,perplexhub/target/site/jacoco/jacoco.xml,spring-boot-starter/target/site/jacoco/jacoco.xml,integration/target/site/jacoco-aggregate/jacoco.xml
           disable_search: true
           flags: java
           name: java-coverage
@@ -147,3 +151,36 @@ jobs:
 
       - name: Test
         run: ./mvnw -B -ntp -nsu test
+
+  consumer-compatibility:
+    name: Consumer compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 25
+        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Verify consumer projects
+        run: ./mvnw -B -ntp -nsu -pl integration -am -Pconsumer-tests install
+
+      - name: Upload consumer compatibility artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: consumer-compatibility-reports
+          path: |
+            integration/target/invoker-reports/
+            integration/target/it/
+          if-no-files-found: ignore

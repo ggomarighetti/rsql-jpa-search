@@ -9,6 +9,10 @@
   </parent>
   <artifactId>rsql-jpa-search-rsql-spi</artifactId>
   <name>rsql-jpa-search RSQL SPI</name>
+  <properties>
+    <jacoco.line.minimum>0.89</jacoco.line.minimum>
+    <jacoco.branch.minimum>1.00</jacoco.branch.minimum>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

@@ -9,7 +9,15 @@
   </parent>
   <artifactId>rsql-jpa-search-jpa-validation</artifactId>
   <name>rsql-jpa-search JPA validation</name>
+  <properties>
+    <jacoco.line.minimum>0.94</jacoco.line.minimum>
+    <jacoco.branch.minimum>1.00</jacoco.branch.minimum>
+  </properties>
   <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>rsql-jpa-search-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>rsql-jpa-search-core</artifactId>

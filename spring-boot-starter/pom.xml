@@ -9,6 +9,10 @@
   </parent>
   <artifactId>rsql-jpa-search-spring-boot-starter</artifactId>
   <name>rsql-jpa-search Spring Boot starter</name>
+  <properties>
+    <jacoco.line.minimum>0.99</jacoco.line.minimum>
+    <jacoco.branch.minimum>1.00</jacoco.branch.minimum>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -37,6 +41,27 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.github.perplexhub</groupId>
+      <artifactId>rsql-jpa</artifactId>
+      <version>${perplexhub.rsql.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

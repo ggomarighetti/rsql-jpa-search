@@ -1,0 +1,90 @@
+name: ClusterFuzzLite
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "47 3 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz:
+    name: ClusterFuzzLite Jazzer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: ["address"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Prepare ClusterFuzzLite config
+        run: |
+          mkdir -p .clusterfuzzlite
+          cp .github/clusterfuzzlite/project.yaml .clusterfuzzlite/project.yaml
+          cp .github/clusterfuzzlite/Dockerfile .clusterfuzzlite/Dockerfile
+          cp .github/clusterfuzzlite/build.sh .clusterfuzzlite/build.sh
+
+      - name: Build fuzzers
+        env:
+          BUILD_FUZZERS_IMAGE: gcr.io/oss-fuzz-base/clusterfuzzlite-build-fuzzers@sha256:79a88907cce4e93d48b5c5ca97a833686636d07d91b7d82abf9e39ebd96b0b42
+          CFL_CONTAINER: cflite-build-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.sanitizer }}
+          SANITIZER: ${{ matrix.sanitizer }}
+        run: |
+          docker run --rm --name "$CFL_CONTAINER" \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            --volume "${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}" \
+            --workdir "${GITHUB_WORKSPACE}" \
+            --env "WORKSPACE=${GITHUB_WORKSPACE}" \
+            --env "PROJECT_SRC_PATH=${GITHUB_WORKSPACE}" \
+            --env "REPOSITORY=${GITHUB_REPOSITORY#*/}" \
+            --env "LANGUAGE=jvm" \
+            --env "SANITIZER=${SANITIZER}" \
+            --env "BAD_BUILD_CHECK=true" \
+            --env "KEEP_UNAFFECTED_FUZZ_TARGETS=true" \
+            --env "LOW_DISK_SPACE=true" \
+            --env "NO_CLUSTERFUZZ_DEPLOYMENT=true" \
+            "$BUILD_FUZZERS_IMAGE"
+
+      - name: Run fuzzers
+        env:
+          CFL_CONTAINER: cflite-run-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.sanitizer }}
+          FUZZ_SECONDS: ${{ github.event_name == 'schedule' && '300' || '60' }}
+          MODE: ${{ github.event_name == 'pull_request' && 'code-change' || 'batch' }}
+          RUN_FUZZERS_IMAGE: gcr.io/oss-fuzz-base/clusterfuzzlite-run-fuzzers@sha256:0c3180277e25dd8637a55270f666fbdac038be38fa736080c95ade75a84e8637
+          SANITIZER: ${{ matrix.sanitizer }}
+        run: |
+          docker run --rm --name "$CFL_CONTAINER" \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            --volume "${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}" \
+            --workdir "${GITHUB_WORKSPACE}" \
+            --env "WORKSPACE=${GITHUB_WORKSPACE}" \
+            --env "PROJECT_SRC_PATH=${GITHUB_WORKSPACE}" \
+            --env "REPOSITORY=${GITHUB_REPOSITORY#*/}" \
+            --env "LANGUAGE=jvm" \
+            --env "SANITIZER=${SANITIZER}" \
+            --env "FUZZ_SECONDS=${FUZZ_SECONDS}" \
+            --env "MODE=${MODE}" \
+            --env "OUTPUT_SARIF=true" \
+            --env "PARALLEL_FUZZING=true" \
+            --env "LOW_DISK_SPACE=true" \
+            --env "NO_CLUSTERFUZZ_DEPLOYMENT=true" \
+            "$RUN_FUZZERS_IMAGE"

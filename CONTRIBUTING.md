@@ -23,6 +23,23 @@ Run the full verification suite:
 ./mvnw verify
 ```
 
+Run the repository quality sweep before opening a pull request:
+
+```bash
+./.github/scripts/verify-quality.sh
+```
+
+On Windows PowerShell:
+
+```powershell
+.\.github\scripts\verify-quality.ps1
+```
+
+The quality sweep runs the normal coverage/SBOM build, the release and
+reproducible-build profiles, consumer-project compatibility checks, dependency
+analysis, and Docker-backed workflow/vulnerability checks when Docker is
+available.
+
 Run coverage and release checks:
 
 ```bash
