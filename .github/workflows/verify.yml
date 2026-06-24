@@ -88,6 +88,10 @@ jobs:
             integration/target/failsafe-reports/
           if-no-files-found: ignore
 
+      - name: Summarize coverage
+        if: ${{ always() }}
+        run: python3 .github/scripts/summarize-jacoco.py
+
       - name: Skip Codecov uploads
         if: ${{ env.CODECOV_TOKEN == '' }}
         run: echo "CODECOV_TOKEN secret is not configured; skipping Codecov uploads."
@@ -97,7 +101,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
           token: ${{ env.CODECOV_TOKEN }}
-          files: integration/target/site/jacoco-aggregate/jacoco.xml
+          files: api/target/site/jacoco/jacoco.xml,rsql-spi/target/site/jacoco/jacoco.xml,core/target/site/jacoco/jacoco.xml,jpa-validation/target/site/jacoco/jacoco.xml,perplexhub/target/site/jacoco/jacoco.xml,spring-boot-starter/target/site/jacoco/jacoco.xml,integration/target/site/jacoco-aggregate/jacoco.xml
           disable_search: true
           flags: java
           name: java-coverage

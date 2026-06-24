@@ -9,6 +9,10 @@
   </parent>
   <artifactId>rsql-jpa-search-api</artifactId>
   <name>rsql-jpa-search API</name>
+  <properties>
+    <jacoco.line.minimum>0.95</jacoco.line.minimum>
+    <jacoco.branch.minimum>0.85</jacoco.branch.minimum>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.springframework</groupId>

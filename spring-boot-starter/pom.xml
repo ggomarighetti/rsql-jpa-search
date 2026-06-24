@@ -9,6 +9,10 @@
   </parent>
   <artifactId>rsql-jpa-search-spring-boot-starter</artifactId>
   <name>rsql-jpa-search Spring Boot starter</name>
+  <properties>
+    <jacoco.line.minimum>0.99</jacoco.line.minimum>
+    <jacoco.branch.minimum>1.00</jacoco.branch.minimum>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

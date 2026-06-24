@@ -9,6 +9,10 @@
   </parent>
   <artifactId>rsql-jpa-search-perplexhub</artifactId>
   <name>rsql-jpa-search Perplexhub adapter</name>
+  <properties>
+    <jacoco.line.minimum>0.62</jacoco.line.minimum>
+    <jacoco.branch.minimum>0.66</jacoco.branch.minimum>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

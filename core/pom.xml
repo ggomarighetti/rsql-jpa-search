@@ -9,6 +9,10 @@
   </parent>
   <artifactId>rsql-jpa-search-core</artifactId>
   <name>rsql-jpa-search core</name>
+  <properties>
+    <jacoco.line.minimum>0.97</jacoco.line.minimum>
+    <jacoco.branch.minimum>0.98</jacoco.branch.minimum>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>

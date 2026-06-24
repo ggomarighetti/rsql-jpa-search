@@ -61,6 +61,8 @@
     <datasource-proxy.version>1.11.0</datasource-proxy.version>
     <expressly.version>6.0.0</expressly.version>
     <jacoco.version>0.8.15</jacoco.version>
+    <jacoco.line.minimum>0.00</jacoco.line.minimum>
+    <jacoco.branch.minimum>0.00</jacoco.branch.minimum>
     <archunit.version>1.4.2</archunit.version>
     <sonar.maven.plugin.version>5.7.0.6970</sonar.maven.plugin.version>
     <maven.deploy.plugin.version>3.1.4</maven.deploy.plugin.version>
@@ -279,6 +281,32 @@
                     <format>XML</format>
                     <format>HTML</format>
                   </formats>
+                </configuration>
+              </execution>
+              <execution>
+                <id>check</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <configuration>
+                  <rules>
+                    <rule>
+                      <element>BUNDLE</element>
+                      <limits>
+                        <limit>
+                          <counter>LINE</counter>
+                          <value>COVEREDRATIO</value>
+                          <minimum>${jacoco.line.minimum}</minimum>
+                        </limit>
+                        <limit>
+                          <counter>BRANCH</counter>
+                          <value>COVEREDRATIO</value>
+                          <minimum>${jacoco.branch.minimum}</minimum>
+                        </limit>
+                      </limits>
+                    </rule>
+                  </rules>
                 </configuration>
               </execution>
             </executions>
