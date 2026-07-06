@@ -45,6 +45,15 @@ updates:
       prefix: "ci"
       include: "scope"
 
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
+
   - package-ecosystem: "docker-compose"
     directory: "/.github/tools"
     schedule:
