@@ -21,6 +21,9 @@ updates:
       include: "scope"
 
     groups:
+      logback:
+        patterns:
+          - "ch.qos.logback:*"
       maven-dependencies:
         patterns:
           - "*"
@@ -47,12 +50,11 @@ updates:
 
     groups:
       codeql-action:
+        # SHA-pinned actions have no semantic version for Dependabot's
+        # update-types filter, so omitting it keeps every CodeQL action grouped.
         patterns:
+          - "github/codeql-action"
           - "github/codeql-action/*"
-        update-types:
-          - "major"
-          - "minor"
-          - "patch"
 
   - package-ecosystem: "docker-compose"
     directory: "/.github/tools"
