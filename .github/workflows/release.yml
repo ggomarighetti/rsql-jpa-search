@@ -285,7 +285,7 @@ jobs:
       - name: Attest release provenance
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
         id: provenance
-        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
         with:
           subject-checksums: release-assets/rsql-jpa-search-${{ steps.release.outputs.version }}-SHA256SUMS
           create-storage-record: false
@@ -293,7 +293,7 @@ jobs:
       - name: Attest aggregate SBOM
         if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
         id: sbom-attestation
-        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
         with:
           subject-checksums: release-assets/rsql-jpa-search-${{ steps.release.outputs.version }}-SHA256SUMS
           sbom-path: release-assets/rsql-jpa-search-${{ steps.release.outputs.version }}-aggregate-cyclonedx.json
