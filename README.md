@@ -209,6 +209,16 @@ public class ProductSearchUseCase {
 Continue with the [documentation index](docs/README.md) for the full API,
 configuration, error handling, customization, architecture, and security guides.
 
+## Complete Tutorial
+
+For an end-to-end guide covering RSQL filters, public field aliases,
+relationships, validation, pagination, sorting, security limits, error
+handling, testing, and production considerations, see:
+
+- [Advanced Search in Spring Boot with JPA and RSQL](https://ggomarighetti.dev/en/articles/advanced-search-spring-boot-jpa-rsql/)
+- [Búsqueda avanzada en Spring Boot con JPA y RSQL](https://ggomarighetti.dev/articulos/busqueda-avanzada-spring-boot-jpa-rsql/)
+  — Spanish
+
 ## Security
 
 If you think you found a vulnerability, please report it privately through
