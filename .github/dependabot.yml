@@ -9,6 +9,9 @@ updates:
       time: "09:00"
       timezone: "America/Argentina/Cordoba"
 
+    cooldown:
+      default-days: 7
+
     open-pull-requests-limit: 5
 
     labels:
@@ -40,6 +43,9 @@ updates:
       time: "09:00"
       timezone: "America/Argentina/Cordoba"
 
+    cooldown:
+      default-days: 7
+
     labels:
       - "dependencies"
       - "github-actions"
@@ -63,6 +69,9 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/Argentina/Cordoba"
+
+    cooldown:
+      default-days: 7
 
     labels:
       - "dependencies"
@@ -88,6 +97,9 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/Argentina/Cordoba"
+
+    cooldown:
+      default-days: 7
 
     labels:
       - "dependencies"
