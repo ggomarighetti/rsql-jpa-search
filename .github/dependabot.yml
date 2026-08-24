@@ -24,9 +24,6 @@ updates:
       include: "scope"
 
     groups:
-      logback:
-        patterns:
-          - "ch.qos.logback:*"
       maven-dependencies:
         patterns:
           - "*"

@@ -53,8 +53,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputTimestamp>2026-06-15T17:29:14Z</project.build.outputTimestamp>
     <maven.compiler.release>17</maven.compiler.release>
-    <spring.boot.version>4.1.0</spring.boot.version>
-    <logback.version>1.6.1</logback.version>
+    <spring.boot.version>4.1.1</spring.boot.version>
     <rsql.parser.version>2.4.0</rsql.parser.version>
     <perplexhub.rsql.version>7.0.2</perplexhub.rsql.version>
     <datasource-proxy.version>1.11.0</datasource-proxy.version>
@@ -88,24 +87,7 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- Keep Logback explicit so Dependabot can update it independently of the Spring Boot BOM. -->
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-classic</artifactId>
-        <version>${logback.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-core</artifactId>
-        <version>${logback.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <version>6.1.2</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
+      <!-- Spring Boot owns this compatible dependency set; Dependabot upgrades it through spring.boot.version. -->
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
