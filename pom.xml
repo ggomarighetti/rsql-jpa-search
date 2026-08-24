@@ -61,7 +61,7 @@
     <jacoco.version>0.8.15</jacoco.version>
     <jacoco.line.minimum>0.00</jacoco.line.minimum>
     <jacoco.branch.minimum>0.00</jacoco.branch.minimum>
-    <archunit.version>1.4.2</archunit.version>
+    <archunit.version>1.5.0</archunit.version>
     <sonar.maven.plugin.version>5.7.0.6970</sonar.maven.plugin.version>
     <maven.deploy.plugin.version>3.1.4</maven.deploy.plugin.version>
     <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
