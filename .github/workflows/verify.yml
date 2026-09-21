@@ -98,7 +98,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
+        uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4
         with:
           token: ${{ env.CODECOV_TOKEN }}
           files: api/target/site/jacoco/jacoco.xml,rsql-spi/target/site/jacoco/jacoco.xml,core/target/site/jacoco/jacoco.xml,jpa-validation/target/site/jacoco/jacoco.xml,perplexhub/target/site/jacoco/jacoco.xml,spring-boot-starter/target/site/jacoco/jacoco.xml,integration/target/site/jacoco-aggregate/jacoco.xml
@@ -109,7 +109,7 @@ jobs:
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() && env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
+        uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4
         with:
           token: ${{ env.CODECOV_TOKEN }}
           files: api/target/surefire-reports/*.xml,api/target/failsafe-reports/*.xml,rsql-spi/target/surefire-reports/*.xml,rsql-spi/target/failsafe-reports/*.xml,core/target/surefire-reports/*.xml,core/target/failsafe-reports/*.xml,jpa-validation/target/surefire-reports/*.xml,jpa-validation/target/failsafe-reports/*.xml,perplexhub/target/surefire-reports/*.xml,perplexhub/target/failsafe-reports/*.xml,spring-boot-starter/target/surefire-reports/*.xml,spring-boot-starter/target/failsafe-reports/*.xml,integration/target/surefire-reports/*.xml,integration/target/failsafe-reports/*.xml
