@@ -62,13 +62,13 @@
     <jacoco.line.minimum>0.00</jacoco.line.minimum>
     <jacoco.branch.minimum>0.00</jacoco.branch.minimum>
     <archunit.version>1.5.0</archunit.version>
-    <sonar.maven.plugin.version>5.7.0.6970</sonar.maven.plugin.version>
-    <maven.deploy.plugin.version>3.1.4</maven.deploy.plugin.version>
+    <sonar.maven.plugin.version>5.8.0.7211</sonar.maven.plugin.version>
+    <maven.deploy.plugin.version>3.2.0</maven.deploy.plugin.version>
     <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
     <maven.source.plugin.version>3.4.0</maven.source.plugin.version>
-    <jreleaser.maven.plugin.version>1.25.0</jreleaser.maven.plugin.version>
+    <jreleaser.maven.plugin.version>1.26.0</jreleaser.maven.plugin.version>
     <cyclonedx.maven.plugin.version>2.9.3</cyclonedx.maven.plugin.version>
-    <maven.artifact.plugin.version>3.6.1</maven.artifact.plugin.version>
+    <maven.artifact.plugin.version>3.7.0</maven.artifact.plugin.version>
     <jazzer.version>0.30.0</jazzer.version>
     <!-- Stable external key updated in SonarQube Cloud to preserve analysis history after the repository rename. -->
     <sonar.projectKey>ggomarighetti_rsql-jpa-search</sonar.projectKey>
@@ -132,7 +132,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.15.0</version>
+          <version>3.16.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-dependency-plugin</artifactId>
@@ -140,11 +140,11 @@
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.6</version>
+          <version>3.6.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>3.5.6</version>
+          <version>3.6.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
