@@ -52,6 +52,29 @@ Generate and validate release SBOMs:
 ./mvnw -Psbom package
 ```
 
+## Updating Maven dependencies
+
+Spring Boot's BOM manages the shared library versions. Update that BOM as a unit
+instead of overriding its individual dependencies.
+
+Surefire and Failsafe share `maven.surefire.version` and have their own Dependabot
+group so a test-runner regression does not block unrelated dependency updates.
+Only version 3.6.0 is excluded: its console capture fails when Jazzer attaches an
+agent on Java 21/25, producing misleading JUnit and ArchUnit errors
+([Apache Surefire #3460](https://github.com/apache/maven-surefire/issues/3460)).
+Later releases remain eligible for updates.
+
+When upgrading the test runners, run the Java 17/21 compatibility tests, full
+Java 25 verification, consumer tests, and the Jazzer workflow. To isolate the
+agent-attachment regression locally on Java 21 or newer:
+
+```bash
+./mvnw -B -ntp -nsu -pl integration -am -Dtest=RsqlSearchFuzzTest -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+Use `mvnw.cmd` on Windows. This command replays the fuzz regression corpus; the
+Jazzer workflow also checks active fuzzing on Linux.
+
 ## Change requirements
 
 - Follow the existing Java style: four-space indentation, braces on the same

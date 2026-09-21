@@ -23,10 +23,26 @@ updates:
       prefix: "deps"
       include: "scope"
 
+    # 3.6.0 breaks console capture when Jazzer attaches its agent on Java 21/25.
+    # Skip only the affected release; allow the next fixed version to be proposed.
+    # https://github.com/apache/maven-surefire/issues/3460
+    ignore:
+      - dependency-name: "org.apache.maven.plugins:maven-surefire-plugin"
+        versions: ["3.6.0"]
+      - dependency-name: "org.apache.maven.plugins:maven-failsafe-plugin"
+        versions: ["3.6.0"]
+
     groups:
+      maven-test-plugins:
+        patterns:
+          - "org.apache.maven.plugins:maven-surefire-plugin"
+          - "org.apache.maven.plugins:maven-failsafe-plugin"
       maven-dependencies:
         patterns:
           - "*"
+        exclude-patterns:
+          - "org.apache.maven.plugins:maven-surefire-plugin"
+          - "org.apache.maven.plugins:maven-failsafe-plugin"
         update-types:
           - "major"
           - "minor"
