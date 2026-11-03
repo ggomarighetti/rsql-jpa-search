@@ -53,12 +53,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputTimestamp>2026-06-15T17:29:14Z</project.build.outputTimestamp>
     <maven.compiler.release>17</maven.compiler.release>
-    <spring.boot.version>4.1.1</spring.boot.version>
+    <spring.boot.version>4.1.2</spring.boot.version>
     <rsql.parser.version>2.4.0</rsql.parser.version>
     <perplexhub.rsql.version>7.0.2</perplexhub.rsql.version>
     <datasource-proxy.version>1.11.1</datasource-proxy.version>
     <expressly.version>6.0.0</expressly.version>
-    <jacoco.version>0.8.15</jacoco.version>
+    <jacoco.version>0.8.16</jacoco.version>
     <jacoco.line.minimum>0.00</jacoco.line.minimum>
     <jacoco.branch.minimum>0.00</jacoco.branch.minimum>
     <archunit.version>1.5.1</archunit.version>
@@ -154,7 +154,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.6.3</version>
+          <version>3.7.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
