@@ -63,7 +63,7 @@
     <jacoco.branch.minimum>0.00</jacoco.branch.minimum>
     <archunit.version>1.5.1</archunit.version>
     <!-- Keep Surefire/Failsafe aligned; 3.6.0 breaks Jazzer agent attachment (apache/maven-surefire#3460). -->
-    <maven.surefire.version>3.5.6</maven.surefire.version>
+    <maven.surefire.version>3.6.1</maven.surefire.version>
     <sonar.maven.plugin.version>5.8.0.7211</sonar.maven.plugin.version>
     <maven.deploy.plugin.version>3.2.0</maven.deploy.plugin.version>
     <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
