@@ -428,7 +428,7 @@ jobs:
           set -euo pipefail
 
           tag="${{ steps.release.outputs.tag }}"
-          title="rsql-jpa-search modular v2 ${tag}"
+          title="rsql-jpa-search ${tag}"
           if gh release view "${tag}" >/dev/null 2>&1; then
             gh release edit "${tag}" --title "${title}" --notes-file release-notes.md --latest
           else
