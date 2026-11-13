@@ -133,14 +133,14 @@ Add it from Maven Central with Maven:
 <dependency>
   <groupId>io.github.ggomarighetti</groupId>
   <artifactId>rsql-jpa-search-spring-boot-starter</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1</version>
 </dependency>
 ```
 
 Or with Gradle Kotlin DSL:
 
 ```kotlin
-implementation("io.github.ggomarighetti:rsql-jpa-search-spring-boot-starter:2.0.0")
+implementation("io.github.ggomarighetti:rsql-jpa-search-spring-boot-starter:2.0.1")
 ```
 
 Applications that do not use Spring Boot can depend on the individual
