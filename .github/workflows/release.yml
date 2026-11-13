@@ -166,6 +166,20 @@ jobs:
         if: steps.release.outputs.release == 'true'
         run: ./mvnw -B -ntp -nsu -Pcoverage,release,sbom,reproducible verify
 
+      - name: Verify consumer dependencies
+        if: steps.release.outputs.release == 'true'
+        run: ./mvnw -B -ntp -nsu -pl integration -am -Pconsumer-tests install
+
+      - name: Scan release and consumer dependencies
+        if: steps.release.outputs.release == 'true'
+        shell: bash
+        run: |
+          docker compose --file .github/tools/compose.yml run --rm \
+            osv-scanner scan \
+            -L /workspace/target/bom.json \
+            -L /workspace/integration/target/it/selective/target/bom.json \
+            -L /workspace/integration/target/it/starter/target/bom.json
+
       - name: Stage Maven artifacts
         if: steps.release.outputs.release == 'true'
         run: |
@@ -307,8 +321,32 @@ jobs:
           version="${{ steps.release.outputs.version }}"
           cp "${{ steps.provenance.outputs.bundle-path }}" \
             "release-assets/rsql-jpa-search-${version}-provenance.sigstore.json"
+          # JSON Lines preserves the complete signed bundle, including its
+          # certificate and transparency evidence, in Scorecard's discovery format.
+          jq -c . "${{ steps.provenance.outputs.bundle-path }}" \
+            > "release-assets/rsql-jpa-search-${version}-provenance.intoto.jsonl"
           cp "${{ steps.sbom-attestation.outputs.bundle-path }}" \
             "release-assets/rsql-jpa-search-${version}-sbom.sigstore.json"
+
+      - name: Verify release provenance
+        if: steps.release.outputs.release == 'true' && env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.release.outputs.version }}"
+          bundle="release-assets/rsql-jpa-search-${version}-provenance.intoto.jsonl"
+          sha256sum --check "release-assets/rsql-jpa-search-${version}-SHA256SUMS"
+          while IFS= read -r -d '' artifact; do
+            gh attestation verify "${artifact}" \
+              --bundle "${bundle}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --signer-workflow "${GITHUB_REPOSITORY}/.github/workflows/release.yml" \
+              --source-digest "${GITHUB_SHA}" \
+              --deny-self-hosted-runners
+          done < <(find target/staging-deploy -type f \
+            \( -name '*.jar' -o -name '*.pom' -o -name '*-cyclonedx.json' \) -print0)
 
       - name: Validate JReleaser configuration
         if: steps.release.outputs.release == 'true'
@@ -390,7 +428,7 @@ jobs:
           set -euo pipefail
 
           tag="${{ steps.release.outputs.tag }}"
-          title="rsql-jpa-search modular v2 ${tag}"
+          title="rsql-jpa-search ${tag}"
           if gh release view "${tag}" >/dev/null 2>&1; then
             gh release edit "${tag}" --title "${title}" --notes-file release-notes.md --latest
           else
@@ -442,6 +480,8 @@ jobs:
             echo "- CycloneDX SBOMs: attached to Maven artifacts"
             echo "- SHA-256 manifest: signed with the release PGP key"
             echo "- Provenance and SBOM attestations: signed with Sigstore"
+            echo "- Provenance discovery: signed bundle also attached as .intoto.jsonl"
+            echo "- Artifact checksums and provenance: verified before publication"
             echo "- SHA-256 manifest and buildinfo: attached to the GitHub release"
             echo "- Retired jpa-rsql-search coordinates: not generated"
             echo "- rsql-jpa-search integration and monolithic coordinates: not generated"

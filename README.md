@@ -127,20 +127,22 @@ single validated `CompiledSearch<T>`.
 Most Spring Boot applications should start with the starter. It brings in the
 API, core compiler, JPA validation, and default Perplexhub backend.
 
+Version 2.0.1 uses PerplexHub `rsql-jpa` and `rsql-common` 7.0.3.
+
 Add it from Maven Central with Maven:
 
 ```xml
 <dependency>
   <groupId>io.github.ggomarighetti</groupId>
   <artifactId>rsql-jpa-search-spring-boot-starter</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1</version>
 </dependency>
 ```
 
 Or with Gradle Kotlin DSL:
 
 ```kotlin
-implementation("io.github.ggomarighetti:rsql-jpa-search-spring-boot-starter:2.0.0")
+implementation("io.github.ggomarighetti:rsql-jpa-search-spring-boot-starter:2.0.1")
 ```
 
 Applications that do not use Spring Boot can depend on the individual

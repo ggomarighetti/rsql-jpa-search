@@ -40,13 +40,16 @@ jobs:
           cache: maven
 
       - name: Generate SBOM
-        run: ./mvnw -B -ntp -nsu -Psbom -DskipTests package
+        run: ./mvnw -B -ntp -nsu -Psbom,consumer-tests -DskipTests install
 
       - name: Upload aggregate SBOM
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cyclonedx-sbom
-          path: target/bom.json
+          path: |
+            target/bom.json
+            integration/target/it/selective/target/bom.json
+            integration/target/it/starter/target/bom.json
           if-no-files-found: error
           retention-days: 5
 
@@ -78,7 +81,9 @@ jobs:
           docker compose --file .github/tools/compose.yml run --rm \
             osv-scanner \
             scan \
-            -L /workspace/bom.json \
+            -L /workspace/target/bom.json \
+            -L /workspace/integration/target/it/selective/target/bom.json \
+            -L /workspace/integration/target/it/starter/target/bom.json \
             --format sarif \
             --output-file /workspace/osv-results.sarif
 
