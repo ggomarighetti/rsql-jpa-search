@@ -5,6 +5,13 @@ Semantic Versioning and release notes are maintained from Conventional Commits.
 
 ## [2.0.1](https://github.com/ggomarighetti/rsql-jpa-search/compare/v2.0.0...v2.0.1) (2026-11-12)
 
+This patch release updates the default backend to PerplexHub RSQL 7.0.3.
+Both `io.github.perplexhub:rsql-jpa` and `rsql-common` move together from
+7.0.2 to 7.0.3, preserving the existing search API and modular coordinates.
+The upstream update fixes managed-type lookup for element collections of
+basic types, including enums
+([PerplexHub #210](https://github.com/perplexhub/rsql-jpa-specification/pull/210)).
+
 ### Dependencies
 
 - Update the Spring Boot dependency baseline from 4.1.0 to 4.1.2 and the
@@ -16,6 +23,10 @@ Semantic Versioning and release notes are maintained from Conventional Commits.
 
 ### Bug Fixes
 
+- Keep the published PerplexHub adapter's existing transitive JPA starter on
+  the project-managed Spring Boot baseline. Standalone consumers previously
+  resolved PerplexHub's Spring Boot 4.0.3, Logback 1.5.32, and Log4j 2.25.3
+  instead of the versions validated inside the multi-module build.
 - Align Surefire and Failsafe versions and group their dependency updates after
   the Surefire 3.6.0 incompatibility with Jazzer agent attachment.
 - Manage the Maven Dependency Plugin centrally so quality scripts use the
@@ -23,6 +34,11 @@ Semantic Versioning and release notes are maintained from Conventional Commits.
 
 ### Build and CI
 
+- Publish the signed SLSA provenance bundle in `.intoto.jsonl` format as well
+  as the existing Sigstore JSON format so OpenSSF Scorecard can discover it.
+- Verify release artifact checksums and provenance before publication.
+- Generate and scan SBOMs for standalone starter and selective-module consumers
+  as well as the reactor, catching vulnerable transitive dependency resolution.
 - Let Dependabot manage CI tool images and synchronize related CodeQL actions.
 - Apply a seven-day cooldown to Maven dependency updates and keep test-plugin
   updates grouped.

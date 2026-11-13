@@ -127,6 +127,8 @@ single validated `CompiledSearch<T>`.
 Most Spring Boot applications should start with the starter. It brings in the
 API, core compiler, JPA validation, and default Perplexhub backend.
 
+Version 2.0.1 uses PerplexHub `rsql-jpa` and `rsql-common` 7.0.3.
+
 Add it from Maven Central with Maven:
 
 ```xml

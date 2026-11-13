@@ -183,6 +183,7 @@
               <streamLogs>true</streamLogs>
               <goals>
                 <goal>test</goal>
+                <goal>org.cyclonedx:cyclonedx-maven-plugin:${cyclonedx.maven.plugin.version}:makeBom</goal>
               </goals>
             </configuration>
             <executions>
