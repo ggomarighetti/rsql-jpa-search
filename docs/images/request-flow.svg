@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original diagram by Guillermo Orue Marighetti.
+Source: https://ggomarighetti.dev/es/articulos/busqueda-avanzada-spring-boot-jpa-rsql/
+Figure: diagrama-flujo. Exported 2026-11-14; see README.md in this directory. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="diagrama-flujo" width="792" height="678" viewBox="-16 -16 792 678" role="img" aria-labelledby="diagrama-flujo-title diagrama-flujo-description">
+<title id="diagrama-flujo-title">Where rsql-jpa-search fits</title>
+<desc id="diagrama-flujo-description">A ticket request passes through the controller and service. SearchCompiler uses SearchDefinition and returns CompiledSearch. The application passes its Specification and Pageable to TicketRepository, which extends JpaSpecificationExecutor and returns a Page of tickets.</desc>
+<rect x="-16" y="-16" width="792" height="678" fill="#ffffff"/>
+<style>#diagrama-flujo .t{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;fill:#141414;text-anchor:middle;dominant-baseline:central}#diagrama-flujo .g{font-family:Inter,system-ui,sans-serif;font-size:11px;fill:#6b6b6b;letter-spacing:.04em}#diagrama-flujo .e{fill:none;stroke:#a3a3a3;stroke-width:1;marker-end:url(#diagrama-flujo-flecha)}</style>
+<defs>
+<marker id="diagrama-flujo-flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+<path d="M0 0 10 5 0 10z" fill="#a3a3a3"/>
+</marker>
+</defs>
+<rect x="8" y="76" width="744" height="84" fill="#fff" stroke="#ededed"/>
+<text x="22" y="96" class="g">CONTROLLER</text>
+<rect x="8" y="188" width="744" height="242" fill="#fff" stroke="#ededed"/>
+<text x="22" y="208" class="g">SERVICE</text>
+<rect x="8" y="458" width="744" height="110" fill="#fff" stroke="#ededed"/>
+<text x="22" y="478" class="g">DATA</text>
+<rect x="272.5" y="8" width="215" height="38" fill="#fff" stroke="#141414" stroke-width="1.5"/>
+<text x="380" y="27" class="t">GET /api/tickets?filter=…</text>
+<path d="M380 46v61" class="e"/>
+<rect x="305" y="108" width="150" height="38" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+<text x="380" y="127" class="t">TicketController</text>
+<path d="M380 146v73" class="e"/>
+<rect x="316" y="220" width="128" height="38" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+<text x="380" y="239" class="t">TicketService</text>
+<rect x="26" y="266" width="150" height="38" fill="#ededed" stroke="#141414" stroke-width="1"/>
+<text x="101" y="285" class="t">SearchDefinition</text>
+<path d="M380 258v37" class="e"/>
+<rect x="312" y="296" width="136" height="38" fill="#ededed" stroke="#141414" stroke-width="1"/>
+<text x="380" y="315" class="t">SearchCompiler</text>
+<path d="M176 285h68v30h67" class="e"/>
+<path d="M380 334v37" class="e"/>
+<rect x="312" y="372" width="136" height="38" fill="#ededed" stroke="#141414" stroke-width="1"/>
+<text x="380" y="391" class="t">CompiledSearch</text>
+<path d="M380 410V517" class="e"/>
+<rect x="26" y="488" width="208" height="38" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+<text x="130" y="507" class="t">JpaSpecificationExecutor</text>
+<rect x="269" y="518" width="222" height="38" fill="#f6f6f6" stroke="#dcdcdc" stroke-width="1"/>
+<text x="380" y="537" class="t">TicketRepository.findAll()</text>
+<path d="M234 507h18v30h16" class="e"/>
+<path d="M380 556v43" class="e"/>
+<rect x="319.5" y="600" width="121" height="38" fill="#fff" stroke="#a3a3a3" stroke-width="1"/>
+<text x="380" y="619" class="t">Page&lt;Ticket&gt;</text>
+</svg>
