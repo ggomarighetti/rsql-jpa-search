@@ -11,125 +11,85 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Status: stable](https://img.shields.io/badge/status-stable-brightgreen)
 
-`rsql-jpa-search` is a small contract layer for Spring applications that accept
-dynamic search input and need to turn it into Spring Data JPA artifacts. It does
-not run the query itself. Your application declares a `SearchDefinition<T>` for
-one search use case, passes the incoming RSQL filter, optional query text,
-and `Pageable` to `SearchCompiler`, and receives a validated
-`CompiledSearch<T>` containing a `Specification<T>` and a safe `Pageable`.
+`rsql-jpa-search` adds an explicit search contract between incoming RSQL filters
+and Spring Data JPA. Clients can combine filters dynamically; your application
+decides which fields and operators exist, how values are validated, and how much
+each request can ask for.
 
-The library is intentionally an orchestration layer around established building
-blocks instead of a replacement for them. Hibernate Validator evaluates the
-application rules declared on fields, operators, query text, and paging;
-[nstdio/rsql-parser](https://github.com/nstdio/rsql-parser) parses the RSQL
-expression; and
-[perplexhub/rsql-jpa-specification](https://github.com/perplexhub/rsql-jpa-specification)
-does the default RSQL-to-JPA `Specification` translation. `rsql-jpa-search`
-adds the contract that ties those pieces together: public aliases, allowlists,
-conversion, limits, mandatory predicates, and structured validation errors.
+Declare the contract, compile the request, and pass the resulting
+`Specification<T>` and `Pageable` to your repository. The library lives in the
+service layer: your application owns authentication, query execution, and HTTP
+responses.
 
-```mermaid
-flowchart LR
-    input["filter: String<br/>query: String?<br/>pageable: Pageable"]
-    repository["repository.findAll(...)<br/><small>extends JpaSpecificationExecutor&lt;T&gt;</small>"]
-
-    subgraph helper["rsql-jpa-search"]
-        direction LR
-        contract["SearchCompiler<br/><small>requires SearchDefinition&lt;T&gt;</small>"]
-        compiled["CompiledSearch&lt;T&gt;<br/><small>returns Specification&lt;T&gt; + Pageable</small>"]
-
-        contract --> compiled
-    end
-
-    input --> contract
-    compiled --> repository
-```
-
-The definition is the application-owned boundary: public field names, entity
-paths, allowed operators, value conversion and validation rules, paging,
-sorting, optional query behavior, mandatory predicates, and protection
-limits live in one declared model. Each request is validated against that model
-before a repository sees the generated `Specification` and `Pageable`.
-
-That lets a search API grow from a handful of filters to richer query use cases
-without adding endpoint-specific parameters for every field, join, operator, or
-sort order. Clients keep the flexible shape that makes RSQL useful, while the
-server keeps a narrow and explicit contract around what can actually be queried.
-
-## What is RSQL?
-
-RSQL is a compact URL filter syntax for expressing comparisons and boolean
-logic. It is useful when an endpoint needs dynamic filtering but should not grow
-a new query parameter for every possible field/operator pair. A single query
-string can describe nested `AND` / `OR` expressions:
-
-```mermaid
-flowchart LR
-    subgraph queryBox["RSQL Query"]
-        direction TB
-        query["'(name=ilike=phone,sku==ABC);status==ACTIVE'"]
-    end
-
-    subgraph treeBox["Logical AST"]
-        direction LR
-        root["AND"]
-        either["OR"]
-        nameMatch["name ILIKE phone"]
-        skuMatch["sku EQUAL ABC"]
-        statusMatch["status EQUAL ACTIVE"]
-
-        root --> either
-        either --> nameMatch
-        either --> skuMatch
-        root --> statusMatch
-    end
-
-    queryBox -- means --> treeBox
-```
-
-In RSQL, `;` means logical `AND`, `,` means logical `OR`, selectors identify
-public fields, and comparison operators such as `==`, `=in=`, `=ge=`, or
-`=ilike=` describe the filter operation.
-
-RSQL itself only describes the expression. It does not decide whether `name`,
-`sku`, `price`, or `status` are entity attributes, joined paths, computed
-fields, or stable API aliases. `rsql-jpa-search` keeps that mapping in
-`SearchDefinition`, validates that each selector/operator/value combination is
-allowed, and then compiles the accepted expression into a JPA `Specification`.
-
-This project uses
-[nstdio/rsql-parser](https://github.com/nstdio/rsql-parser), a maintained fork
-of the original [jirutka/rsql-parser](https://github.com/jirutka/rsql-parser).
+[Getting started](#getting-started) · [API reference](docs/API_REFERENCE.md) ·
+[Full tutorial (English)](https://ggomarighetti.dev/en/articles/advanced-search-spring-boot-jpa-rsql/) ·
+[Tutorial completo (español)](https://ggomarighetti.dev/es/articulos/busqueda-avanzada-spring-boot-jpa-rsql/)
 
 ## Why a Search Contract?
 
-Direct RSQL-to-JPA translation is useful, and this library uses it under the
-hood. It is a good fit when an endpoint has a small trusted surface or when the
-application already owns a complete search contract before the repository sees
-the generated `Specification`.
+Search endpoints often start with a few parameters and accumulate another
+filter, sort option, and conditional for every new requirement. RSQL lets the
+client express those combinations in one filter parameter. A search contract
+keeps that flexibility within the API you intend to expose:
 
-For public APIs, the direct path usually needs an explicit boundary in front of
-JPA. Public field names should not have to be entity paths, each field needs an
-operator and sort policy, values should be converted and validated before
-persistence sees them, paging and sorting need bounded limits, and
-application-owned predicates such as tenant, authorization, visibility, or
-soft-delete filters must not be removable by clients.
+- **Public field names:** map `team` to `team.name` without exposing the entity
+  structure or private properties such as `ownerId`.
+- **Explicit capabilities:** allow filtering and sorting per field, choose its
+  operators, and convert and validate values before querying.
+- **Bounded requests:** limit filter complexity, list sizes, joins, pagination,
+  and sorting.
+- **Mandatory conditions:** combine application-owned rules, such as ticket
+  ownership or tenant isolation, with the client filter using `AND`.
 
-`rsql-jpa-search` adds that contract while still relying on established RSQL
-building blocks underneath it. `nstdio/rsql-parser` handles the syntax,
+The library contributes three pieces to an otherwise ordinary Spring Data flow:
+
+| Type | Responsibility |
+|---|---|
+| `SearchDefinition<T>` | Declares the reusable contract for one search use case |
+| `SearchCompiler` | Enforces the contract and adds application-owned business rules |
+| `CompiledSearch<T>` | Carries the resulting `Specification<T>` and validated `Pageable` |
+
+![A ticket request passes through the controller and service; SearchCompiler uses SearchDefinition to produce CompiledSearch for the repository.](docs/images/request-flow.svg)
+
+Under the hood, [nstdio/rsql-parser](https://github.com/nstdio/rsql-parser)
+parses the expression,
 [perplexhub/rsql-jpa-specification](https://github.com/perplexhub/rsql-jpa-specification)
-handles the default JPA `Specification` translation, Hibernate Validator
-handles declared rules, and this library orchestrates those pieces into a
-single validated `CompiledSearch<T>`.
+provides the default JPA translation, and Hibernate Validator evaluates declared
+constraints. `rsql-jpa-search` coordinates those pieces around your contract.
+
+## What is RSQL?
+
+RSQL gives the frontend and backend a shared language for filters. The frontend
+builds an expression from the user's selections and sends it in a URL query
+parameter. The backend parses it into a tree of conditions, an abstract syntax
+tree (AST), before compiling the query. For example:
+
+```text
+status==OPEN;(team=in=(support,billing),tag==urgent)
+```
+
+This selects tickets whose status is `OPEN` and that either belong to the
+support or billing team or carry the urgent tag. A semicolon (`;`) means `AND`,
+a comma (`,`) means `OR`, and parentheses group conditions. Without parentheses,
+`AND` takes precedence over `OR`.
+
+![The RSQL expression becomes an AND node containing status == OPEN and an OR node containing the team and tag comparisons.](docs/images/rsql-expression.svg)
+
+Each comparison has a public selector, an operator, and one or more values:
+`team`, `=in=`, and `(support,billing)`. The configured backend also supports
+operators such as `==`, `!=`, `=ge=`, `=le=`, `=between=`, and `=ilike=`. Which
+ones a client may use depends on the field's definition; see the
+[filtering reference](docs/API_REFERENCE.md#filtering).
 
 ## Getting Started
 
-Most Spring Boot applications should start with the starter. It brings in the
-API, core compiler, JPA validation, and default Perplexhub backend.
+### 1. Add the starter
 
-Version 2.0.1 uses PerplexHub `rsql-jpa` and `rsql-common` 7.0.3.
+The starter targets Java 17+ and Spring Boot 4.x. It includes the API, compiler,
+JPA validation, and default Perplexhub backend, and auto-configures
+`SearchDefinition.Factory` and `SearchCompiler` for injection.
 
-Add it from Maven Central with Maven:
+With Maven:
 
 ```xml
 <dependency>
@@ -145,81 +105,204 @@ Or with Gradle Kotlin DSL:
 implementation("io.github.ggomarighetti:rsql-jpa-search-spring-boot-starter:2.0.1")
 ```
 
-Applications that do not use Spring Boot can depend on the individual
-`rsql-jpa-search-*` modules instead.
+Version 2.0.1 uses Perplexhub `rsql-jpa` and `rsql-common` 7.0.3. Applications
+without Spring Boot can assemble the [individual modules](docs/ARCHITECTURE.md#modules).
 
-The runtime flow is a regular Spring Data repository plus an application-owned
-search definition. The repository only needs to support Spring Data JPA
-specifications:
+### 2. Declare the search contract
+
+Consider a support application where each user searches their own tickets.
+Assume a JPA `Ticket` entity with `UUID id`, `String title`, `TicketStatus status`,
+`Instant createdAt`, a `Team team` relation with a `name` property, a `Tag`
+collection named `tags` with a `name` property, and a private `UUID ownerId`.
+`TicketStatus` includes `OPEN`.
+
+Register a reusable definition as a Spring bean in a `@Configuration` class.
+The factory applies the application's path-depth policy during construction.
+The definition belongs to a search use case: the same entity can have a narrow
+contract for a user's inbox and a broader one for a supervisor's view.
 
 ```java
-public interface ProductRepository
-        extends JpaRepository<Product, UUID>,
-                JpaSpecificationExecutor<Product> {
+import io.github.ggomarighetti.rsqljpasearch.definition.SearchDefinition;
+import java.time.Instant;
+import org.hibernate.validator.cfg.defs.PatternDef;
+import org.hibernate.validator.cfg.defs.SizeDef;
+import org.springframework.context.annotation.Bean;
+
+import static io.github.ggomarighetti.rsqljpasearch.rsql.operator.RsqlOperators.BETWEEN;
+import static io.github.ggomarighetti.rsqljpasearch.rsql.operator.RsqlOperators.EQUAL;
+import static io.github.ggomarighetti.rsqljpasearch.rsql.operator.RsqlOperators.IGNORE_CASE_LIKE;
+import static io.github.ggomarighetti.rsqljpasearch.rsql.operator.RsqlOperators.IN;
+
+@Bean
+SearchDefinition<Ticket> ticketSearch(SearchDefinition.Factory definitions) {
+    return definitions.builder()
+            .entity(Ticket.class)
+            .fields(fields -> {
+                fields.add("title", String.class)
+                        .filterable(f -> f.allow(IGNORE_CASE_LIKE));
+                fields.add("status", TicketStatus.class)
+                        .filterable(f -> f.allow(EQUAL, IN));
+                fields.add("createdAt", Instant.class)
+                        .filterable(f -> f.allow(BETWEEN))
+                        .sortable();
+                fields.add("team", String.class)
+                        .path("team.name")
+                        .filterable(f -> f.allow(EQUAL, IN));
+                fields.add("tag", String.class)
+                        .path("tags.name")
+                        .filterable(f -> f.allow(EQUAL, op -> op.each(value -> value
+                                .rule(new PatternDef().regexp("[a-z0-9-]+")))));
+            })
+            .query(q -> q
+                    .rule(new SizeDef().min(3).max(80))
+                    .specification(TicketSpecifications::matchesText))
+            .paging()
+            .limits(limits -> limits
+                    .filter(f -> f.maxComparisons(10).maxInValues(20))
+                    .paging(p -> p.maxSize(50)))
+            .build();
 }
 ```
 
-Then declare the API-facing search contract. In the `execute` method below, the
-incoming filter, query text, and `Pageable` are compiled into a
-`CompiledSearch<Product>`; its validated `Specification` and safe `Pageable`
-are passed to the repository, and the repository returns the resulting
-`Page<Product>`.
+Fields start with filtering and sorting disabled. `.filterable(f -> ...)`
+allows only the operators you declare; `.filterable()` uses a type-aware default
+profile. Null checks always require an explicit opt-in. `.sortable()` enables
+both sort directions, and `.paging()` enables paged requests.
+
+Public names are independent of persistence paths. Here, `team` maps to
+`team.name`, while `ownerId` has no public selector and cannot be filtered or
+sorted by the client.
+
+![Public title maps to title, public team maps to team.name, and ownerId remains private.](docs/images/public-fields.svg)
+
+The `tag` selector traverses a to-many relation. Accepted filters on that path
+make the query distinct to avoid duplicate tickets; sorting through to-many
+paths is rejected. Values are converted to their declared types before
+validation, so malformed enums, UUIDs, or dates fail during compilation.
+
+### 3. Add business rules and free-text search
+
+Business rules are conditions that must hold regardless of the client's filter.
+Keep request-dependent rules, such as ticket ownership, outside the reusable
+`SearchDefinition`: write them as ordinary Spring Data `Specification`s and
+pass them to the compiler with the authenticated user's context.
+
+The optional `query` input follows a separate path from RSQL. Its specification
+factory is registered in the definition, and the library validates the text
+before calling it. The application supplies both pieces:
 
 ```java
-@Service
-@Transactional(readOnly = true)
-@RequiredArgsConstructor
-public class ProductSearchUseCase {
+import java.util.Locale;
+import java.util.UUID;
+import org.springframework.data.jpa.domain.Specification;
 
-    private final SearchCompiler searchCompiler;
-    private final ProductRepository productRepository;
+final class TicketSpecifications {
+    static Specification<Ticket> ownedBy(UUID userId) {
+        return (root, query, cb) -> cb.equal(root.get("ownerId"), userId);
+    }
 
-    private static final SearchDefinition<Product> PRODUCT_DEFINITION =
-            SearchDefinition.builder()
-                    .entity(Product.class)
-                    .fields(fields -> {
-                        fields.add("id", UUID.class)
-                                .sortable();
-
-                        fields.add("name", String.class)
-                                .searchable();
-
-                        fields.add("category", String.class)
-                                .path("category.name")
-                                .filterable(filter -> filter
-                                        .withDefaults()
-                                        .deny(IN)
-                                        .allow(IS_NULL))
-                                .sortable(sort -> sort.allow(ASC));
-                    })
-                    .query(query -> query
-                            .rule(new SizeDef().min(3).max(80))
-                            .specification(ProductSpecs::queryByNameOrSku))
-                    .paging(paging -> paging
-                            .size(size -> size.rule(new MaxDef().value(50))))
-                    .build();
-
-    public Page<Product> execute(String filter, String query, Pageable pageable) {
-        CompiledSearch<Product> search =
-                searchCompiler.compile(filter, query, pageable, PRODUCT_DEFINITION);
-
-        return productRepository.findAll(search.specification(), search.pageable());
+    static Specification<Ticket> matchesText(String text) {
+        String literal = text.toLowerCase(Locale.ROOT)
+                .replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        return (root, query, cb) ->
+                cb.like(cb.lower(root.get("title")), "%" + literal + "%", '\\');
     }
 }
 ```
 
-Continue with the [documentation index](docs/README.md) for the full API,
-configuration, error handling, customization, architecture, and security guides.
+This example uses a case-insensitive substring match with literal input. For
+larger datasets, the same hook can use a database full-text function or an
+indexed search strategy. The library validates the text; the application owns
+the matching semantics.
+
+### 4. Compile and execute
+
+The repository needs Spring Data's `JpaSpecificationExecutor`:
+
+```java
+public interface TicketRepository
+        extends JpaRepository<Ticket, UUID>, JpaSpecificationExecutor<Ticket> {
+}
+```
+
+Inject `SearchCompiler`, `SearchDefinition<Ticket>` (the `ticketSearch` bean),
+and `TicketRepository` into your service. Compilation evaluates the request
+against the definition and adds the business rules. If the request meets the
+contract, the service passes the resulting specification and pageable to the
+repository; otherwise, compilation throws an exception:
+
+```java
+import io.github.ggomarighetti.rsqljpasearch.compile.CompiledSearch;
+
+public Page<Ticket> search(UUID userId, String filter, String query, Pageable pageable) {
+    CompiledSearch<Ticket> compiled = searchCompiler.compile(
+            filter, query, pageable, ticketSearch,
+            TicketSpecifications.ownedBy(userId));
+
+    return ticketRepository.findAll(compiled.specification(), compiled.pageable());
+}
+```
+
+Take `userId` from the authenticated context. The controller passes the optional
+`filter` and `query` strings and the Spring Data `Pageable` to this method. For
+example, an open-ticket search can use these parameters (shown before URL
+encoding):
+
+```text
+GET /api/tickets?filter=status==OPEN;team==support&page=0&size=20&sort=createdAt,desc
+```
+
+The compiler combines the RSQL filter, optional query specification, and
+`ownedBy(userId)` with `AND`. Ownership still applies when the client uses `OR`
+inside its filter or omits the filter entirely.
+
+![The RSQL filter, optional query, and mandatory ownerId == userId condition are combined under AND.](docs/images/compiled-search.svg)
+
+## Validation and Limits
+
+A rejected request stops compilation before your service calls the repository.
+With the definition above:
+
+| Input | Why it is rejected |
+|---|---|
+| `ownerId==...` | The selector is not public |
+| `status=ilike=O*` | The field only allows equality and membership |
+| `tag==Urgent!` | The value fails the declared format rule |
+| `size=500` | The definition limits page size to 50 |
+| `sort=team,asc` | Sorting is only enabled for `createdAt` |
+
+Map request validation and protection exceptions to your API's error response,
+typically HTTP `400` through `@RestControllerAdvice`. They provide stable codes
+and structured details. A `SearchDefinitionValidationException` instead signals
+an application configuration error. See the [error handling guide](docs/ERROR_HANDLING.md)
+for the exception types and handler examples.
+
+Global protection is configured under `rsql.jpa.search`; `.limits(...)` overrides
+selected policy values for a definition. Tune filter length, tree depth,
+comparison counts, joins, offsets, and sort orders for your indexes and traffic.
+See [configuration](docs/CONFIGURATION.md) for the defaults and override semantics.
+
+## Documentation
+
+- [API reference](docs/API_REFERENCE.md): definitions, operators, validation,
+  paging, sorting, query text, and slice compilation.
+- [Configuration](docs/CONFIGURATION.md): global properties and local policies.
+- [Error handling](docs/ERROR_HANDLING.md): exceptions, error codes, and HTTP handlers.
+- [Customization](docs/CUSTOMIZATION.md): custom operators, conversion, and backends.
+- [Architecture](docs/ARCHITECTURE.md): modules, runtime flow, and trust boundaries.
+- [All guides](docs/README.md): the documentation index, including security and release guides.
 
 ## Complete Tutorial
 
-For an end-to-end guide covering RSQL filters, public field aliases,
-relationships, validation, pagination, sorting, security limits, error
-handling, testing, and production considerations, see:
+The blog walks through the ticket example from the entity and controller to
+definitions, compilation, business rules, errors, and configuration:
 
 - [Advanced Search in Spring Boot with JPA and RSQL](https://ggomarighetti.dev/en/articles/advanced-search-spring-boot-jpa-rsql/)
-- [Búsqueda avanzada en Spring Boot con JPA y RSQL](https://ggomarighetti.dev/articulos/busqueda-avanzada-spring-boot-jpa-rsql/)
+- [Búsqueda avanzada en Spring Boot con JPA y RSQL](https://ggomarighetti.dev/es/articulos/busqueda-avanzada-spring-boot-jpa-rsql/)
   — Spanish
+
+The diagrams above are local SVG exports from the article. Their
+[source and export notes](docs/images/README.md) are included in the repository.
 
 ## Security
 
